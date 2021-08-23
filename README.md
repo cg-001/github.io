@@ -16,15 +16,15 @@
 
 ## 程序功能：
 
- Control-t 随机得到一句诗，
- Control-f 搜索诗词，
- Control-i 添加诗词到数据库
- Control-u 更新数据库中的内容。
+- Control-t 随机得到一句诗，
+- Control-f 搜索诗词，
+- Control-i 添加诗词到数据库
+- Control-u 更新数据库中的内容。
 
  其他两个都是一样的快捷键。
 
- ctrl-z表示undo，
- ctrl-y表示redo.
+- ctrl-z表示undo，
+- ctrl-y表示redo.
 
 ## 版本
 pipi  windows ver 1.010 2021.08.23
