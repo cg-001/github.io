@@ -1,12 +1,12 @@
 # github.io
 ## 简介
-这里都是一些小软件，用tcltk语言编写的。
+这里是一些用tcltk语言编写的小工具软件。
 这些小软件的作用是：
 1. 记忆诗词shici.tcl,shici.db，
 2. 记忆外语单词words.tcl,words.db,
 3. 简洁型笔记本notes.tcl,notes.db.
 
-目前暂时只有这三个小软件。
+
 
 ## 使用方式：
 1. 下载tcltk语言，网站在：https://www.tcl.tk/software/tcltk/ ，最好下载BAWT Multi-platform，因为我使用的是这个，在tcltk的bin文件夹下面，wish就是支持tk界面与tcl语言的程序，tclsh就是只支持tcl语言的程序。
@@ -30,3 +30,6 @@
 pipi  windows ver 1.010 2021.08.23
 1. 改进了界面函数，相比ver 1.0，可以调整界面的大小。
 2. 搜索时可以用颜色显示出搜索词，并可以一次搜索多个词，用空格分开。
+
+pipi  windows ver 1.0 2021.08.09
+- 非常简洁的背单词、诗词、笔记本。
