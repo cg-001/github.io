@@ -32,7 +32,7 @@ proc initial {} {
     #标题：皮皮诗词
     set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe8\xaf\x97\xe8\xaf\x8d";
     set tt [encoding convertfrom  utf-8 $tstr]
-    wm title . "$tt pipi.shici windows ver 1.010"
+    wm title . "$tt pipi.shici windows ver 1.0011"
 
 
 
@@ -54,6 +54,21 @@ proc initial {} {
     set bottome [entry .f1.e -width 80]
 
     set bottomBPress [button .f1.b -text "Press" -command show]
+
+	#当单击时改变组件的颜色
+	global flag
+	set flag 0
+	global color
+	set color {purple	"rosy brown" red blue black green SteelBlue  CadetBlue chocolate coral  "dark blue" orchid  navy burlywood }
+	global colorZhujian
+	set colorZhujian {.f.ltitle .f1.l .f1.e .f1.b}
+	bind . <KeyPress> {
+		set flag [expr int(rand()*[llength $colorZhujian])]
+		set color1 [expr int(rand()*[llength $color])]
+		
+		set strCZ [lindex $colorZhujian $flag ]
+		$strCZ configure -fg [ lindex $color $color1]		
+	};#bind
 
 }
 
@@ -79,25 +94,47 @@ bind .f1.e <Control-i> {
 
     set name [string trim $name]
     set neirong  [string trim $neirong]
-		
+	
 	#把单引号修改为\'，因为sql中单引号有特殊用途，不改会错。
 	set name [string map {'  '' }  $name]
 	set neirong [string map {'  '' }  $neirong]
-	
+			
+
+		
+
     if {$name!="" && $neirong !=""} {
-	db eval "insert  into shici values( null,'$name','$neirong');"
-	.f.t delete 1.0 end
-	.f1.e delete 0 end
-	.f.t insert end "successful to insert."
+	#查询诗词是否已经收录
+		if {[isShoulu  $neirong]==1} {
+			.f1.e delete 0 end		
+			.f.t insert end "already have one."	
+			return
+		}		
+		db eval "insert  into shici values( null,'$name','$neirong');"
+		.f.t delete 1.0 end
+		.f1.e delete 0 end
+		.f.t insert end "successful to insert."
     }
+	
 }
 
+	#查询诗词是否已经收录
+proc isShoulu {strNeirong} {
+	set str "shicineirong like '%$strNeirong%' "
+	set x [db eval "select * from shici where $str" ]
 
+	if { $strNeirong == [string trim [lindex $x 2]] } {
+		return 1
+	} else {
+		return 0
+	}
+}
+	
+	
 #搜索
 bind .f1.e <Control-f> {
     search
 }
-
+	
 #搜索proc
 #多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
 #利用tag高亮度显示搜索词。
@@ -270,7 +307,7 @@ bind .f1.e  <Control-u> {
 proc update0 {} {
 
     toplevel .tplupdate
-    wm title .tplupdate "Update...If conform,Please Press Control-S to update." 	
+    wm title .tplupdate "Update...." 	
     
     frame .tplupdate.f
     
@@ -356,7 +393,9 @@ proc update1 {} {
     place .t1.t -relx 0.001 -y 0.001 -width  [expr $mwidth-1] -height [expr $mheight-1]
     .t1.t insert end  "\t id:$id\nname:$name\nneirong:\n $neirong\n"
 
-  db eval "update shici set  shiciname='$name',shicineirong='$neirong' where id=$id"
+	 if {$name!="" && $neirong !=""} {
+		db eval "update shici set  shiciname='$name',shicineirong='$neirong' where id=$id"
+  }
 }
 
 

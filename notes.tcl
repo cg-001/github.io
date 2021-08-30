@@ -35,7 +35,7 @@ proc initial {} {
   #  set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe7\xac\x94\xe8\xae\xb0 \xe6\xb5\x8b\xe8\xaf\x95\xe7\x89\x88 ";
   
   set tt [encoding convertfrom  utf-8 $tstr]
-  wm title . "$tt pipi.notes windows ver 1.010"
+  wm title . "$tt pipi.notes windows ver 1.0011"
 
 
     set upframe [frame .f -width $mwidth -height $mheight ;]
@@ -57,7 +57,20 @@ proc initial {} {
 
     set bottomBPress [button .f1.b -text "Press" -command show]
 
-
+	#当单击时改变组件的颜色
+	global flag
+	set flag 0
+	global color
+	set color {purple	"rosy brown" red blue black green SteelBlue orchid navy "dark blue"}
+	global colorZhujian
+	set colorZhujian {.f.ltitle .f1.l .f1.e .f1.b}
+	bind . <KeyPress> {
+		set flag [expr int(rand()*[llength $colorZhujian])]
+		set color1 [expr int(rand()*[llength $color])]
+		
+		set strCZ [lindex $colorZhujian $flag ]
+		$strCZ configure -fg [ lindex $color $color1]
+	};#bind
 
 }
 
@@ -277,7 +290,7 @@ bind .f1.e  <Control-u> {
 proc update0 {} {
 
     toplevel .tplupdate
-    wm title .tplupdate "Update...If conform,Please Press Control-S to update." 	
+    wm title .tplupdate "Update...." 	
     
     frame .tplupdate.f
     
@@ -361,8 +374,9 @@ proc update1 {} {
 	text .t1.t -width 43 -height 15 -bg grey70 -font textfont
     place .t1.t -relx 0.001 -y 0.001 -width  [expr $mwidth-1] -height [expr $mheight-1]
     .t1.t insert end  "\t id:$id\nname:$name\nneirong:\n $neirong\n"
-
-   db eval "update notes set  notesname='$name',notesneirong='$neirong' where id=$id"
+	 if {$name!="" && $neirong !=""} {
+		db eval "update notes set  notesname='$name',notesneirong='$neirong' where id=$id"
+   }
 }
 
 
