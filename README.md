@@ -18,15 +18,15 @@
 
 
 ## 程序功能：
-有text组件中：
-- Control-t 随机得到一句(个)诗、笔记、单词，
-- ctrl-z表示undo，
-- ctrl-y表示redo.
+在中部text组件中：
+- Ctrl-t 随机得到一句(个)诗、笔记、单词，
+- Ctrl-z表示undo，
+- Ctrl-y表示redo.
 
 在底部输入组件中：
-- Control-f 搜索，
-- Control-i 添加记录到数据库
-- Control-u 更新数据库中的内容，需要输入整数。
+- Ctrl-f 搜索，
+- Ctrl-i 添加记录到数据库
+- Ctrl-u 更新数据库中的内容，需要输入整数。
 
 
 
