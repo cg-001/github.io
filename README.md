@@ -10,8 +10,9 @@
 
 ## 使用方式：
 1. 下载shici.tcl,shici.db,words.tcl,words.db,notes.tcl,notes.db.
-1.1. 修改shici.tcl,words.tcl,notes.tcl中工作目录部分，改成它们所在的文件夹，
-1.2. shici.db,words.db,notes.db是sqlite3语言建立的数据库，如果想变为空数据库，可以删掉，然后用tcltk中的wish打开，即可自动生成新的数据库。
+--  修改shici.tcl,words.tcl,notes.tcl中工作目录部分，改成它们所在的文件夹，
+--  shici.db,words.db,notes.db是sqlite3语言建立的数据库，如果想变为空数据库，可以删掉，然后用tcltk中的wish打开，即可自动生成新的数据库。
+
 2. 下载tcltk语言，网站在：https://www.tcl.tk/software/tcltk/ ，推荐下载BAWT Multi-platform，因为我使用的是这个，在tcltk的bin文件夹下面，wish就是支持tk界面与tcl语言的程序，tclsh就是只支持tcl语言的程序。
 3. 用wish.exe打开上述tcl文件即可。
 
