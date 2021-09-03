@@ -31,7 +31,7 @@
 
 
 ## 版本
-pipi.words recite windows ver 1.00100 2021.0903
+pipi. windows ver 1.00100 2021.0903
 - 改正了搜索每一行时只搜索第一个相同词的问题。
 
 pipi. windows ver 1.0011 2021.0830
