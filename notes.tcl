@@ -174,8 +174,7 @@ proc search {} {
 			
 			for {set k 0} {$k<$lenlinestr} {incr k}  {
 				#获取搜索词位置
-				set tmplocation [string first $tmp \
-											[.f.t get $j.0 $j.end] $k]
+				set tmplocation [string first $tmp  $linestr $k]
 				
 				if {$tmplocation!=-1} {
 				#==-1表示没有找到
