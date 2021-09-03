@@ -170,9 +170,10 @@ proc search {} {
 			#每一行字符串的长度lenlinestr
 			set lenlinestr [string length $linestr]
 			
-			for {set k 0} {$k<$lenlinestr} {incr k}  {
+			set k 0
+			while {$k<$lenlinestr} {
 				#获取搜索词位置
-				set tmplocation [string first $tmp $linestr $k]
+				set tmplocation [string first $tmp  $linestr $k]
 				
 				if {$tmplocation!=-1} {
 				#==-1表示没有找到
@@ -181,14 +182,16 @@ proc search {} {
 				set tagx tag$i$j
 				#.f.t insert end "\ntagx tag$i$j\n"
 				
-				#shutmp搜索词所在位置加上搜索词的长度
-				set shutmp [expr $tmplocation+$lentmp]
+				#k搜索词所在位置加上搜索词的长度
+				set k [expr $tmplocation+$lentmp]
 				
 				.f.t tag add $tagx \
-					$j.$tmplocation $j.$shutmp
+					$j.$tmplocation $j.$k
 				.f.t tag configure $tagx -background red -foreground black	
+				} else {
+					break
 				}
-			};#for k
+			};#while k
 		};#for j
 	};#for i
     };#$et != ""
