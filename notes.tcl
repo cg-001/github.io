@@ -35,7 +35,7 @@ proc initial {} {
   #  set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe7\xac\x94\xe8\xae\xb0 \xe6\xb5\x8b\xe8\xaf\x95\xe7\x89\x88 ";
   
   set tt [encoding convertfrom  utf-8 $tstr]
-  wm title . "$tt pipi.notes windows ver 1.0011"
+  wm title . "$tt pipi.notes windows ver 1.00100"
 
 
     set upframe [frame .f -width $mwidth -height $mheight ;]
@@ -145,12 +145,8 @@ proc search {} {
 			set str "$str ( notesname like '%$tmp%' OR notesneirong like '%$tmp%' ) "
 		}
 	}
-	#.f.t insert end $str
-
 
 	set x [db eval "select * from notes where $str"]
-	#set x [db eval "select * from notes \
-								     where notesname like '%$et%' OR notesneirong like '%$et%' "]
 									 
 	foreach {id ming neirong}  $x {
 	    .f.t insert end "\nid:\t$id \nMing:\n$ming \nNeiRong:\n$neirong\n\n"
@@ -161,37 +157,44 @@ proc search {} {
 	set lines [.f.t count -displaylines 1.0 end]
 	
 	#高亮度显示搜索词。
+	#i代表搜索词的个数，以空格来分开。
+	#j代表.f.t中的行数，行数从1-end。
+	#k代表.f.t中每一行的字符串的长度。
 	for {set i 0} {$i<$lensp} {incr i} {
 		set tmp [lindex $sp $i];#搜索词
 
 		#获取搜索词长度
 		set lentmp [string length $tmp]
-		for {set j 0} {$j<$lines} {incr j}  {
-			#获取搜索词位置
-			set tmplocation [string first $tmp \
-										[.f.t get $j.0 $j.end] 0]
-			#.f.t insert end "\n tmp:$tmp xxx [.f.t get $j.0 $j.end]"					
-			if {$tmplocation!=-1} {
-			#==-1表示没有找到
-			
-			#高亮度搜索词
-			set tagx tag$i$j
-			#.f.t insert end "\ntagx tag$i$j\n"
-			
-			#shutmp搜索词所在位置加上搜索词的长度
-			set shutmp [expr $tmplocation+$lentmp]
-			
-			.f.t tag add $tagx \
-			    $j.$tmplocation $j.$shutmp
-			.f.t tag configure $tagx -background red -foreground black
-			
-
-			
-			}
-		}
 		
-	}
-    }
+		for {set j 1} {$j<=$lines} {incr j}  {
+			#得到每一行的字符串linestr
+			set linestr [.f.t get $j.0 $j.end] 
+			#每一行字符串的长度lenlinestr
+			set lenlinestr [string length $linestr]
+			
+			for {set k 0} {$k<$lenlinestr} {incr k}  {
+				#获取搜索词位置
+				set tmplocation [string first $tmp \
+											[.f.t get $j.0 $j.end] $k]
+				
+				if {$tmplocation!=-1} {
+				#==-1表示没有找到
+				
+				#高亮度搜索词
+				set tagx tag$i$j
+				#.f.t insert end "\ntagx tag$i$j\n"
+				
+				#shutmp搜索词所在位置加上搜索词的长度
+				set shutmp [expr $tmplocation+$lentmp]
+				
+				.f.t tag add $tagx \
+					$j.$tmplocation $j.$shutmp
+				.f.t tag configure $tagx -background red -foreground black	
+				}
+			};#for k
+		};#for j
+	};#for i
+    };#$et != ""
 }
 
 
