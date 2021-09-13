@@ -21,7 +21,7 @@ proc initial {} {
 	wm geometry . ${winwidth}x${winheigh}+$winx+$winy
 	wm minsize . 500 350	
 	
-	set strtitle "\xe6\x89\x93\xe5\xad\x97\xe8\xbd\xaf\xe4\xbb\xb6"
+	set strtitle "\xe7\x9a\xae\xe7\x9a\xae\xe6\x89\x93\xe5\xad\x97"
 	set tt [encoding convertfrom  utf-8 $strtitle]
 	wm title . "$tt pipi.dazhi version 1.0000"
 	
