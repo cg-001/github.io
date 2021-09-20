@@ -7,6 +7,7 @@
 2. 记忆外语单词words.tcl,words.db,
 3. 高效笔记本notes.tcl,notes.db.
 4. 高效打字软件并可以用于熟悉外语句型typewriter.tcl。
+5. 任务提示tasktable.tcl tasktables.tcl 
 
 
 ## 使用方式：
@@ -32,6 +33,9 @@
 
 
 ## 版本
+任务提示pipi .windows ver 1.0000 2021.09.20
+- 任务提示软件tasktable.tcl tasktables.tcl 
+
 pipi. windows ver 1.0000 2021.09.13
 - 打字与外语学习软件 typewriter.tcl。
 
