@@ -12,11 +12,12 @@
 
 ## 使用方式：
 1. 下载shici.tcl,shici.db,words.tcl,words.db,notes.tcl,notes.db.
-- -  修改shici.tcl,words.tcl,notes.tcl中工作目录部分，改成它们所在的文件夹，
-- -  shici.db,words.db,notes.db是sqlite3语言建立的数据库，如果想变为空数据库，可以删掉，然后用tcltk中的wish打开，即可自动生成新的数据库。
-
-2. 下载tcltk语言，网站在：https://www.tcl.tk/software/tcltk/ ，推荐下载BAWT Multi-platform，在tcltk的bin文件夹下面，wish是支持tk GUI界面与tcl语言的程序，tclsh是只支持tcl语言的程序。
+- -  shici.db,words.db,notes.db是sqlite3语言建立的数据库，如果想变为空数据库，可以删掉，然后用tcltk中的wish.exe打开，即可自动生成新的数据库。
+2. 下载tcltk语言，网站在：https://www.tcl.tk/software/tcltk/ ，推荐下载BAWT Multi-platform，
 3. 用wish.exe打开上述tcl文件即可。
+- 在tcltk的bin文件夹下面，
+- - wish.exe是支持tk GUI界面与tcl语言的程序，
+- - tclsh.exe是只支持tcl语言的程序。
 
 
 ## 程序功能：
@@ -33,6 +34,9 @@
 
 
 ## 版本
+2021.09.21
+- 修改了获取当前目录的命令。
+
 任务提示pipi .windows ver 1.0000 2021.09.20
 - 任务提示软件tasktable.tcl tasktables.tcl 
 
