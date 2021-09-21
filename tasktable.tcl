@@ -19,8 +19,8 @@ grid .l1 -sticky nsew
 text .t -font mefont -width 20 -height 5
 grid .t -sticky nsew 
 	
-    #标题：皮皮日程tasktables
-    set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe6\x97\xa5\xe7\xa8\x8b";
+    #标题：皮皮任务tasktables
+    set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe4\xbb\xbb\xe5\x8a\xa1";
     set tt [encoding convertfrom  utf-8 $tstr]
     wm title . "$tt pipi.tasktables windows ver 1.00001"
 	
