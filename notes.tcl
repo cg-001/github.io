@@ -1,6 +1,8 @@
 
 
-cd "g:/project/tcltk" ;#工作目录，notes.tcl与notes.db所在的文件夹。
+#cd "g:/project/tcltk" #工作目录，notes.tcl与notes.db所在的文件夹。
+set gzml [file dirname [ file nativename  [info script]]]
+cd $gzml
 
 package require sqlite3
 sqlite3 db notes.db
@@ -35,7 +37,7 @@ proc initial {} {
   #  set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe7\xac\x94\xe8\xae\xb0 \xe6\xb5\x8b\xe8\xaf\x95\xe7\x89\x88 ";
   
   set tt [encoding convertfrom  utf-8 $tstr]
-  wm title . "$tt pipi.notes windows ver 1.00100"
+  wm title . "$tt pipi.notes windows ver 1.00101"
 
 
     set upframe [frame .f -width $mwidth -height $mheight ;]
@@ -159,7 +161,7 @@ proc search {} {
 	#高亮度显示搜索词。
 	#i代表搜索词的个数，以空格来分开。
 	#j代表.f.t中的行数，行数从1-end。
-	#k代表.f.t中每一行的字符串的长度。
+	#k代表搜索词在.f.t中每一行的字符串里的位置。
 	for {set i 0} {$i<$lensp} {incr i} {
 		set tmp [lindex $sp $i];#搜索词
 
@@ -184,7 +186,7 @@ proc search {} {
 				set tagx tag$i$j
 				#.f.t insert end "\ntagx tag$i$j\n"
 				
-				#k搜索词所在位置加上搜索词的长度
+				#k搜索词所在位置
 				set k [expr $tmplocation+$lentmp]
 				
 				.f.t tag add $tagx \

@@ -3,8 +3,11 @@
 set resttime 41
 
 #日程表tasktables.tcl
-cd "g:/project/tcltk" ;
+#cd "g:/project/tcltk" ;
 #工作目录，
+set gzml [file dirname [ file nativename  [info script]]]
+cd $gzml
+
 source -encoding  utf-8 tasktables.tcl
 
 font create mefont -size 26
@@ -16,6 +19,10 @@ grid .l1 -sticky nsew
 text .t -font mefont -width 20 -height 5
 grid .t -sticky nsew 
 	
+    #标题：皮皮日程tasktables
+    set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe6\x97\xa5\xe7\xa8\x8b";
+    set tt [encoding convertfrom  utf-8 $tstr]
+    wm title . "$tt pipi.tasktables windows ver 1.00001"
 	
 proc tt {s body totime} {
 	eval  $body

@@ -1,8 +1,10 @@
 
 #打字软件
 
-cd "g:/project/tcltk" ;
+#cd "g:/project/tcltk" ;
 #工作目录，
+set gzml [file dirname [ file nativename  [info script]]]
+cd $gzml
 
 proc initial {} {
 
@@ -23,7 +25,7 @@ proc initial {} {
 	
 	set strtitle "\xe7\x9a\xae\xe7\x9a\xae\xe6\x89\x93\xe5\xad\x97"
 	set tt [encoding convertfrom  utf-8 $strtitle]
-	wm title . "$tt pipi.dazhi version 1.0000"
+	wm title . "$tt pipi.dazhi version 1.0001"
 	
 	font create mefont -size 26
 	
