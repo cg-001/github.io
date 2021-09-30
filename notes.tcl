@@ -113,14 +113,23 @@ bind .f1.e <Control-i> {
 }
 
 
-#搜索
+#搜索一个记录
 bind .f1.e <Control-f> {
 	#获取搜索内容
     set et [string trim [.f1.e get]	]
     search $et
 }
 
-#搜索proc
+#搜索一行
+bind .f1.e <Control-l> {
+	#获取搜索内容
+    set et [string trim [.f1.e get]	]
+    set et "l $et"	
+    search  $et
+}
+
+
+#搜索一个记录
 #多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
 #利用tag高亮度显示搜索词。
 #增加一个只列出有搜索单词的句子功能，et中第一个词为l(l即是line)(小L)时，
@@ -498,7 +507,7 @@ proc ResizeJiemian {Window} {
 #程序功能：
 #Control-t 随机得到一句笔记，
 #Control-f 搜索笔记，
-#l+搜索词，可以搜索单个句子。
+#l+搜索词，Control-l可以搜索单个句子。
 #Control-i 添加笔记到数据库
 #Control-u 更新数据库中的内容。
 #所需程序

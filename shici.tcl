@@ -156,7 +156,7 @@ proc isShoulu {strNeirong} {
 }
 	
 	
-#搜索
+#搜索一个记录
 bind .f1.e <Control-f> {
 	#取消飞花令状态
 	set isfeihualist 0
@@ -165,7 +165,16 @@ bind .f1.e <Control-f> {
     search $et
 }
 	
-#搜索proc
+#搜索一行
+bind .f1.e <Control-l> {
+	#获取搜索内容
+    set et [string trim [.f1.e get]	]
+    set et "l $et"	
+    search  $et
+}
+
+
+#搜索一个记录
 #多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
 #利用tag高亮度显示搜索词。
 #增加一个只列出有搜索单词的句子功能，et中第一个词为l(l即是line)(小L)时，
@@ -693,7 +702,7 @@ bind .f1.e <Control-j>  {
 #程序功能：
 #Control-t 随机得到一句诗，
 #Control-f 搜索诗词，
-#l+搜索词，可以搜索单个句子。
+#l+搜索词，Control-l可以搜索单个句子。
 #Control-i 添加诗词到数据库
 #Control-u 更新数据库中的内容。
 #Control-j 诗词飞花令，按Control-j 启动，按回车键输入诗句。
