@@ -37,7 +37,7 @@ proc initial {} {
   #  set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe7\xac\x94\xe8\xae\xb0 \xe6\xb5\x8b\xe8\xaf\x95\xe7\x89\x88 ";
   
   set tt [encoding convertfrom  utf-8 $tstr]
-  wm title . "$tt pipi.notes windows ver 1.00101"
+  wm title . "$tt pipi.notes windows ver 1.00110"
 
 
     set upframe [frame .f -width $mwidth -height $mheight ;]
@@ -115,32 +115,49 @@ bind .f1.e <Control-i> {
 
 #搜索
 bind .f1.e <Control-f> {
-    search
+	#获取搜索内容
+    set et [string trim [.f1.e get]	]
+    search $et
 }
 
 #搜索proc
 #多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
 #利用tag高亮度显示搜索词。
-proc search {} {
-	#获取搜索内容
-    set et [string trim [.f1.e get]	]
+#增加一个只列出有搜索单词的句子功能，et中第一个词为l(l即是line)(小L)时，
+proc search {sename} {
+
+	set et $sename
 	
 	#把名字里面的回车换行符去掉，
 	set et [string map {"\r\n"  "" }  $et]
 	
+	set sp ""
+	
     if {$et != ""}  {
 	
 	#拆分split搜索内容
-	set sp [split $et " "]
+	set x1 [split $et " "]
+	
+	#把sp里面的空值去掉。
+	 foreach i $x1 {
+		if {$i!=""} {lappend sp $i}
+	}
 	
 	set lensp [llength $sp]
 	
 	set str "";#str作为搜索字段	
 	
-	for {set i 0} {$i<$lensp} {incr i} {
+	#如果第一个搜索词为l(l即是line)(小L)，ii为下面for中i的起始值。
+	if {[lindex $sp 0]=="l"} {
+		set ii 1
+		#set lensp [expr $lensp-1]
+	} else {set ii 0}
+	
+	for {set i $ii} {$i<$lensp} {incr i} {
 		set tmp [lindex $sp $i]
 		#把单引号修改为\'，因为sql中单引号有特殊用途，不改会错。
 		set tmp [string map {'  '' }  $tmp]
+		
 		if {$i<[expr $lensp-1]} {
 			set str "$str (notesname like '%$tmp%' OR notesneirong like '%$tmp%' ) AND "
 		} else {
@@ -148,13 +165,50 @@ proc search {} {
 		}
 	}
 
+	#x表示搜索值。
 	set x [db eval "select * from notes where $str"]
 									 
+	#在.f.t中显示搜索内容
+	#如果第一个搜索词为l(l即是line)，只显示一行，否则显示所有内容
+	#如果mmi等于lensp，表明所有搜索词都在这一行。
+
 	foreach {id ming neirong}  $x {
-	    .f.t insert end "\nid:\t$id \nMing:\n$ming \nNeiRong:\n$neirong\n\n"
+		if {$ii==1} {
+			#1.拆分neirong，
+			set flst [ split $neirong "\r\n"]
+			
+			#2.遍历flst，找出有搜索词的内容。
+			foreach fi $flst {			
+				#如果每个搜索词都在这一句当中。
+				set mmi 0
+				for {set i $ii} {$i<$lensp} {incr i} {
+					#得到一个搜索词tmp
+					set tmp [lindex $sp $i]
+					if {[string first $tmp $fi 0 ]!=-1} {
+						incr mmi 
+					} 
+						
+				} 
+					
+				#如果在一句中有所有搜索词
+				if {$mmi==[expr $lensp-1]} {
+					.f.t insert end "\nid:\t$id \nMing:\n$ming \nfi:\n$fi\n\n"			
+				}
+			}
+		} else {
+			.f.t insert end "\nid:\t$id \nMing:\n$ming \nNeiRong:\n$neirong\n\n"
+		} 		
 	}
 	.f.ltitle configure -text "Title   $et"
 	
+	gaoliang $ii $sp $lensp
+    };#$et != ""
+}
+
+#ii：当搜索词第一个是l (即line)时，ii=1,否则为0，
+#sp为搜索词， lensp为搜索词个数，sp与lensp都是去掉ii后的数。
+proc gaoliang {ii sp lensp} {
+
 	#得到当前text的总行数
 	set lines [.f.t count -displaylines 1.0 end]
 	
@@ -162,7 +216,7 @@ proc search {} {
 	#i代表搜索词的个数，以空格来分开。
 	#j代表.f.t中的行数，行数从1-end。
 	#k代表搜索词在.f.t中每一行的字符串里的位置。
-	for {set i 0} {$i<$lensp} {incr i} {
+	for {set i $ii} {$i<$lensp} {incr i} {
 		set tmp [lindex $sp $i];#搜索词
 
 		#获取搜索词长度
@@ -198,9 +252,7 @@ proc search {} {
 			};#while k
 		};#for j
 	};#for i
-    };#$et != ""
 }
-
 
 
 #出题 
@@ -258,7 +310,7 @@ bind .f.t  <Control-t> {
 	    if {[string trim $str] != "" } {
 		.f.ltitle configure -text "id:$id  $name";
 		.f.t delete 1.0 end
-		.f.t insert end "sums$sums\n\n\n\n\t $str\t\n" ;
+		.f.t insert end "sums: $sums\n\n\n\n\t $str\t\n" ;
 		#不用\t\n，最后两个字会颠倒。
 		
 	    }
@@ -446,9 +498,10 @@ proc ResizeJiemian {Window} {
 #程序功能：
 #Control-t 随机得到一句笔记，
 #Control-f 搜索笔记，
+#l+搜索词，可以搜索单个句子。
 #Control-i 添加笔记到数据库
 #Control-u 更新数据库中的内容。
 #所需程序
 #两个
 #一、notes.tcl ，tcl语言程序
-#二、notes.db ，slited3数据库
+#二、notes.db ，sqlite3数据库

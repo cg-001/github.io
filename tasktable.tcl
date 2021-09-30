@@ -8,7 +8,7 @@ set resttime 41
 set gzml [file dirname [ file nativename  [info script]]]
 cd $gzml
 
-source -encoding  utf-8 tasktables.tcl
+source -encoding  utf-8 tasktable.txt
 
 font create mefont -size 26
 
@@ -54,12 +54,15 @@ proc tt {s body totime} {
 		wm iconify .
 	}
 	
+	#日程表时间到了，提示。
 	set time4 [clock format [clock sec] -format "%H:%M"]
 	
 	dict for {key value} $richeng {
 		if {$key==$time4} {
 			.t delete 1.0 end
 			.t insert end  "$key\t$value"
+			wm attributes . -topmost true 
+			wm deiconify .
 		}
 		
 	}

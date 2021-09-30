@@ -1,0 +1,8 @@
+
+#在输入日文单词时，这些符号都要删除掉
+
+	set alphabet { 
+		a b c d e f g h i j k l m n o p q r s t u v w x y z \
+		ā á ǎ à ō ó ǒ ò ê ē é ě è ī í ǐ ì ū ú ǔ ù ǖ ǘ ǚ ǜ ü	\
+		"→__→[中]"
+	}

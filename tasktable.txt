@@ -1,0 +1,9 @@
+
+#schedule 时间表，日程richeng。
+set richeng {
+	15:01 writer
+	17:57 plan003
+	1:28 计划一
+	1:30 plan002
+} 
+

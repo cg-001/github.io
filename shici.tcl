@@ -8,6 +8,22 @@ cd $gzml
 package require sqlite3
 sqlite3 db shici.db
 
+    #得到总记录数，sums
+    set sums [db eval {select count() from shici;}]
+	
+	#去掉不需要记忆(已经记得非常熟悉)的诗词，
+	#在插入control_i及control_t函数中。
+	#glst存放需要记忆(记得不熟悉)的id号
+	source -encoding  utf-8 shici.txt
+	if {[llength $shiciId!=0]} {
+		#set i 1，因为sqlite中第一个记录id值为1
+		for {set i 1} {$i<=$sums} {incr i} {
+			set tmpId [lsearch $shiciId $i]
+			if {$tmpId ==-1} {
+				lappend glst $i
+			}
+		}	
+	}
 
 #初始化
 proc initial {} {
@@ -35,7 +51,7 @@ proc initial {} {
     #标题：皮皮诗词
     set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe8\xaf\x97\xe8\xaf\x8d";
     set tt [encoding convertfrom  utf-8 $tstr]
-    wm title . "$tt pipi.shici windows ver 1.00101"
+    wm title . "$tt pipi.shici windows ver 1.00110"
 
 
 
@@ -118,6 +134,13 @@ bind .f1.e <Control-i> {
 		.f.t insert end "successful to insert."
     }
 	
+	#增加记得不太熟悉的id号到global glst中。
+	global glst
+	
+	#得到数据库中总记录数，sums
+	set sums [db eval {select count() from shici;}]
+	
+	lappend $glst [expr $sums+1]
 }
 
 	#查询诗词是否已经收录
@@ -135,29 +158,52 @@ proc isShoulu {strNeirong} {
 	
 #搜索
 bind .f1.e <Control-f> {
-    search
+	#取消飞花令状态
+	set isfeihualist 0
+	#获取搜索内容
+    set et [string trim [.f1.e get]	]
+    search $et
 }
 	
 #搜索proc
 #多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
 #利用tag高亮度显示搜索词。
-proc search {} {
-	#获取搜索内容
-    set et [string trim [.f1.e get]	]
+#增加一个只列出有搜索单词的句子功能，et中第一个词为l(l即是line)(小L)时，
+
+proc search {sename} {
+	global feihualist
+	global isfeihualist 
+	
+	set et $sename
 	
 	#把名字里面的回车换行符去掉，
 	set et [string map {"\r\n"  "" }  $et]
 	
+	set sp ""	
+	
     if {$et != ""}  {
 	
 	#拆分split搜索内容
-	set sp [split $et " "]
+	set x1 [split $et " "]
+	
+
+	
+	#把sp里面的空值去掉。
+	 foreach i $x1 {
+		if {$i!=""} {lappend sp $i}
+	}
 	
 	set lensp [llength $sp]
 	
 	set str "";#str作为搜索字段	
 	
-	for {set i 0} {$i<$lensp} {incr i} {
+	#如果第一个搜索词为l(l即是line)(小L)，ii为下面for中i的起始值。
+	if {[lindex $sp 0]=="l"} {
+		set ii 1
+		#set lensp [expr $lensp-1]
+	} else {set ii 0}
+	
+	for {set i $ii} {$i<$lensp} {incr i} {
 		set tmp [lindex $sp $i]
 		
 		#把单引号修改为\'，因为sql中单引号有特殊用途，不改会错。
@@ -170,14 +216,57 @@ proc search {} {
 		}
 	}
 	
+	#x表示搜索值。
 	set x [db eval "select * from shici where $str"]
-									 
+
+	#在.f.t中显示搜索内容
+	#如果第一个搜索词为l(l即是line)，只显示一行，否则显示所有内容
+	#如果mmi等于lensp，表明所有搜索词都在这一行。
+
 	foreach {id ming neirong}  $x {
-	    .f.t insert end "\nid:\t$id \nMing:\n$ming \nNeiRong:\n$neirong\n\n"
+		if {$ii==1} {
+			#1.拆分neirong，
+			set flst [ split $neirong "\r\n"]
+			
+			#2.遍历flst，找出有搜索词的内容。
+			foreach fi $flst {			
+				#如果每个搜索词都在这一句当中。
+				set mmi 0
+				for {set i $ii} {$i<$lensp} {incr i} {
+					#得到一个搜索词tmp
+					set tmp [lindex $sp $i]
+					if {[string first $tmp $fi 0 ]!=-1} {
+						incr mmi 
+					} 
+						
+				} 
+					
+				#如果在一句中有所有搜索词
+				if {$mmi==[expr $lensp-1]  } {
+					if {$isfeihualist==0} {
+						.f.t insert end "\nid:\t$id \nMing:\n$ming \nfi:\n$fi\n\n"	
+					} else  {
+						lappend feihualist "\nid:\t$id \nMing:\n$ming \nfi:\n$fi\n\n"	
+				}		
+				}
+			}
+		} else {
+			if  {$isfeihualist==0} {
+				.f.t insert end "\nid:\t$id \nMing:\n$ming \nNeiRong:\n$neirong\n\n"
+			} 
+		} 		
 	}
 	
 	.f.ltitle configure -text "Title   $et"
 	
+	gaoliang $ii $sp $lensp
+    };#$et != ""
+}
+
+#ii：当搜索词第一个是l (即line)时，ii=1,否则为0，
+#sp为搜索词， lensp为搜索词个数，sp与lensp都是去掉ii后的数。
+proc gaoliang {ii sp lensp} {
+
 	#得到当前text的总行数
 	set lines [.f.t count -displaylines 1.0 end]
 	
@@ -185,7 +274,7 @@ proc search {} {
 	#i代表搜索词的个数，以空格来分开。
 	#j代表.f.t中的行数，行数从1-end。
 	#k代表搜索词在.f.t中每一行的字符串里的位置。
-	for {set i 0} {$i<$lensp} {incr i} {
+	for {set i $ii} {$i<$lensp} {incr i} {
 		set tmp [lindex $sp $i];#搜索词
 
 		#获取搜索词长度
@@ -221,9 +310,7 @@ proc search {} {
 			};#while k
 		};#for j
 	};#for i
-    };#$et != ""
 }
-
 
 
 #出题 
@@ -232,17 +319,24 @@ proc search {} {
 #并用select 得到这个记录，并显示在组件text中
 bind .f.t  <Control-t> {
 
-    #1.得到总记录数，sums
-    set sums [db eval {select count() from shici;}]
+	#得到数据库总记录数，xsums
+    set xsums [db eval {select count() from shici;}]
+	
+    #1.得到glst的长度sums，glst是记得不熟悉记录的id号，
+	global glst
+    set sums [llength $glst]
 
     #2.得到一个随机数，
     #int(rand()*$sums)得到0-(sums-1)之间的数。
     #而sqlite中的记录数是从1到sums。
     set r [expr int(rand()*$sums)]
     
+	#3.从glst中得到id值
+	set mid [lindex $glst $r]
+	
     if {$r<$sums} {
 	#用select 得到这个记录，
-	set jilu [db eval "select * from shici where id=[expr $r+1]"]
+	set jilu [db eval "select * from shici where id=$mid"]
 
 	#，。！？；到utf-8
 	set d1 "\xef\xbc\x8c"
@@ -281,7 +375,7 @@ bind .f.t  <Control-t> {
 	    if {[string trim $str] != "" } {
 		.f.ltitle configure -text "id:$id  $name";
 		.f.t delete 1.0 end		
-		.f.t insert end "sums:$sums\n\n\n\n\t $str\t\n" ;
+		.f.t insert end "sums: $xsums\n\n\n\n\t $str\t\n" ;
 		#不用\t\n，最后两个字会颠倒。
 		
 	    }
@@ -412,22 +506,6 @@ proc update1 {} {
 
 
 
-#显示.f1.e中的字符串
-proc show {} {
-
-	#获取输入框.f1.e中的字符串
-	set et  [string trim [.f1.e get]	]
-	
-	#把名字里面的回车换行符去掉，
-	set et [string map {"\r\n"  "" }  $et]
-	
-	if {$et != ""}  {
-		#立即显示字符串
-		.f.t insert end "\n$et "    
-		.f1.e delete 0 end		
-	}
-}
-
 
 #动态修改程序大小
 bind . <Configure> {
@@ -465,13 +543,162 @@ proc ResizeJiemian {Window} {
 
 }
 
+#显示.f1.e中的字符串
+#回车键显示飞花令
+proc show {} {
+
+	global feihualist
+	global isfeihualist 
+	
+	#获取输入框.f1.e中的字符串
+	set et  [string trim [.f1.e get]	]
+	
+	#把名字里面的回车换行符去掉，
+	set et [string map {"\r\n"  "" }  $et]
+	
+	#如果et小于5，return
+	if {[string length $et]<5} {
+		.f.t insert end "\nMust more than 5.\n"
+		return
+		}
+
+	set sp ""
+	#ett，从.f.title中得到飞花令的词。
+	set ett [.f.ltitle cget -text]
+	
+    if {$ett != ""}  {
+		
+		#拆分split搜索内容
+		set x1 [split $ett " "]
+		
+		#把sp里面的空值去掉。
+		 foreach i $x1 {
+			set i [string trim $i]
+			if {$i!="Title" && $i!="l" && $i!=""} {lappend sp $i}
+		}
+		#.f.t insert end "sp:$sp ::"
+		set lensp [llength $sp]
+	}
+	
+	if {$et != ""}  {
+		
+		#ix是feihualist里面的记录号
+		set ix 0
+		
+		#先显示输入值对、错。
+		set duc [string first $et $feihualist]
+		if {$duc!=-1} {
+			.f.t insert end "\nRight.\n"
+		} else {			
+			.f.t insert end "\nWrong.\n"
+			return
+		}
+		
+		foreach i $feihualist {
+		
+			#看输入诗句在不在飞花令里面。$iet不等于-1就算找到了。
+			set iet [string first $et $i]
+			
+			if {$iet!=-1} {	
+				#如果在飞花令中，立即显示字符串
+				.f.t insert end "\n$et \n$i\n"    
+				.f1.e delete 0 end		
+				
+				#得到输入字符串长度
+				set lenet [string length $et]
+				set lenfhl [string length $feihualist]
+				#search
+				set ilet [lsearch $feihualist $et]
+				
+				#并删除feihualist中相关句子
+				lset feihualist $ix ""
+				
+				#.f.t insert end "\n $iet $lenet $lenfhl $i"
+			} else {
+				incr ix
+			}
+		}
+	}		
+		
+	#高亮显示内容
+	gaoliang 0 $sp $lensp
+	
+}
+
+#Control-j 诗词飞花令，按Control-j 启动，按回车键输入诗句。
+#在标题下面显示飞花令是什么。
+set feihualist ""
+set isfeihualist 0
+bind .f1.e <Control-j>  {	
+	global feihualist
+	global isfeihualist 
+	
+	set feihualist ""
+	set isfeihualist 1
+	
+	#显示飞花令标题
+	set fhlstr "\xe9\xa3\x9e\xe8\x8a\xb1\xe4\xbb\xa4"
+	set tt [encoding convertfrom  utf-8 $fhlstr]
+	.f.t delete 1.0 end
+	.f.t insert end "\n\t$tt\n"
+	
+	#获取搜索内容
+    set et [string trim [.f1.e get]	]
+	
+	#把名字里面的回车换行符去掉，
+	set et [string map {"\r\n"  "" }  $et]
+	
+	set sp ""
+	
+    if {$et != ""}  {
+		
+		#拆分split搜索内容
+		set x1 [split $et " "]
+		
+		#把sp里面的空值去掉。
+		 foreach i $x1 {
+			if {$i!=""} {lappend sp $i}
+		}
+		
+		set lensp [llength $sp]
+	}
+	
+	#如果第一个搜索词为l(l即是line)(小L)，ii为下面for中i的起始值。
+	if {[lindex $sp 0]=="l"} {
+		set ii 1
+		search $et	
+		#.f.t insert end "$sp hellollll: et:$et \tfeihualist:$feihualist"
+	} else {
+		set ii 0			
+		#如果et值没有l(即line)，添加l，
+		set et  [string cat "l " $et]
+		 search $et
+		#.f.t insert end "$sp lklklkhello: et:$et \tfeihualist:$feihualist"
+	}
+	
+	#显示飞花令提示，数据库中有多少条相关记录
+	.f.t insert end "\n$tt:$et\tnumber:[llength $feihualist]"
+	
+	#删除.f1.e中内容et
+	.f1.e delete 0 end	
+    
+	#高亮显示内容
+	gaoliang $ii $sp $lensp
+	
+	#.f.t insert end "\n$feihualist\tnumber:[llength $feihualist]"
+}
+
+
+
 #程序功能：
 #Control-t 随机得到一句诗，
 #Control-f 搜索诗词，
+#l+搜索词，可以搜索单个句子。
 #Control-i 添加诗词到数据库
 #Control-u 更新数据库中的内容。
+#Control-j 诗词飞花令，按Control-j 启动，按回车键输入诗句。
 
 #所需程序
 #两个
 #一、shici.tcl ，tcl语言程序
-#二、shici.db ，slited3数据库
+#二、shici.db ，sqlite3数据库
