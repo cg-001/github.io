@@ -1,19 +1,19 @@
 # github.io
 ## 简介
 皮皮 软件
-这里是一些用tcltk语言编写的小工具软件。
+一些用tcltk语言编写的小工具软件。some widges for memorize.
 这些小软件的作用是：
 1. 记忆诗词shici.tcl,shici.db，
-2. 记忆外语单词words.tcl,words.db,
-3. 高效笔记本notes.tcl,notes.db.
+2. 记忆外语单词words.tcl,words.db,for recite foreign language words.
+3. 高效笔记本notes.tcl,notes.db. efficiency notes for record.
 4. 高效打字软件并可以用于熟悉外语句型typewriter.tcl。
 5. 任务提示tasktable.tcl tasktables.tcl 
 
 
 ## 使用方式：
-1. 下载shici.tcl,shici.db,words.tcl,words.db,notes.tcl,notes.db.
-- -  shici.db,words.db,notes.db是sqlite3语言建立的数据库，如果想变为空数据库，可以删掉，然后用tcltk中的wish.exe打开，即可自动生成新的数据库。
-2. 下载tcltk语言，网站在：https://www.tcl.tk/software/tcltk/ ，推荐下载BAWT Multi-platform，
+1. 下载download *.tcl,*.db,*.txt.
+
+2. 下载download tcltk语言，websit：https://www.tcl.tk/software/tcltk/ ，for BAWT Multi-platform，
 3. 用wish.exe打开上述tcl文件即可。
 - 在tcltk的bin文件夹下面，
 - - wish.exe是支持tk GUI界面与tcl语言的程序，
