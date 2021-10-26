@@ -1,7 +1,6 @@
 
 
-#cd "g:/project/tcltk" ;
-#工作目录，shici.tcl与shici.db所在的文件夹。
+#工作目录。
 set gzml [file dirname [ file nativename  [info script]]]
 cd $gzml
 
@@ -162,15 +161,19 @@ bind .f1.e <Control-f> {
 	set isfeihualist 0
 	#获取搜索内容
     set et [string trim [.f1.e get]	]
-    search $et
+	if {$et!=""} {
+		search $et
+	}
 }
 	
 #搜索一行
 bind .f1.e <Control-l> {
 	#获取搜索内容
     set et [string trim [.f1.e get]	]
-    set et "l $et"	
-    search  $et
+    if {$et!=""} {
+		set et "l $et"	
+		search  $et
+	}
 }
 
 
@@ -253,15 +256,15 @@ proc search {sename} {
 				#如果在一句中有所有搜索词
 				if {$mmi==[expr $lensp-1]  } {
 					if {$isfeihualist==0} {
-						.f.t insert end "\nid:\t$id \nMing:\n$ming \nfi:\n$fi\n\n"	
+						.f.t insert end "\nid:\t$id \nMing:\t$ming \nfi:\n$fi\n\n"	
 					} else  {
-						lappend feihualist "\nid:\t$id \nMing:\n$ming \nfi:\n$fi\n\n"	
+						lappend feihualist "\nid:\t$id \tMing:\n$ming \nfi:\n$fi\n\n"	
 				}		
 				}
 			}
 		} else {
 			if  {$isfeihualist==0} {
-				.f.t insert end "\nid:\t$id \nMing:\n$ming \nNeiRong:\n$neirong\n\n"
+				.f.t insert end "\nid:\t$id \nMing:\t$ming \nNeiRong:\n$neirong\n\n"
 			} 
 		} 		
 	}

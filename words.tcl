@@ -1,7 +1,6 @@
 
 
-#cd "g:/project/tcltk";
-#工作目录，words.tcl与words.db所在的文件夹。
+#工作目录。
 set gzml [file dirname [ file nativename  [info script]]]
 cd $gzml
 
@@ -34,7 +33,7 @@ proc initial {} {
     #标题：皮皮单词
     set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe5\x8d\x95\xe8\xaf\x8d ";
     set tt [encoding convertfrom  utf-8 $tstr]
-    wm title . "$tt pipi.words recite windows ver 1.00110"
+    wm title . "$tt pipi.words recite windows ver 1.00111"
 
 
 
@@ -116,16 +115,30 @@ bind .f1.e <Control-i> {
 bind .f1.e <Control-f> {
 	#获取搜索内容
     set et [string trim [.f1.e get]	]
-    search $et
+    if {$et!=""} {
+		search $et
+	}
 }
 
 
-#搜索一行
+#只搜索内容中的一行
 bind .f1.e <Control-l> {
 	#获取搜索内容
     set et [string trim [.f1.e get]	]
-    set et "l $et"	
-    search  $et
+    if {$et!=""} {
+		set et "l $et"	
+		search  $et
+	}
+}
+
+#只搜索单词名
+bind .f1.e <Control-m> {
+	#获取搜索内容
+    set et [string trim [.f1.e get]	]
+    if {$et!=""} {
+		set et "m $et"	
+		search  $et
+	}
 }
 
 
@@ -156,12 +169,17 @@ proc search {sename} {
 	
 	set str "";#str作为搜索字段	
 	
-	#如果第一个搜索词为l(l即是line)(小L)，ii为下面for中i的起始值。
-	if {[lindex $sp 0]=="l"} {
+	#如果第一个搜索词为l(l即是line)(小L)，
+	#或为m,m表示搜索单词名，
+	
+	#ii为下面for中i的起始值。
+	set xii [lindex $sp 0]
+	if {$xii=="l" || $xii=="m"} {
 		set ii 1
 		#set lensp [expr $lensp-1]
 	} else {set ii 0}
 	
+	#把搜索词放入sql语句中。
 	for {set i $ii} {$i<$lensp} {incr i} {
 		set tmp [lindex $sp $i]
 		#把单引号修改为\'，因为sql中单引号有特殊用途，不改会错。
@@ -174,15 +192,25 @@ proc search {sename} {
 	}
 
 	#x表示搜索值。
+	if {$str!=""} {
 	set x [db eval "select * from words where $str"]
-
+	} else {
+		.f.t insert end "Search words couldn't find\n"
+		return
+	}
+	
 	#在.f.t中显示搜索内容
-	#如果第一个搜索词为l(l即是line)，只显示一行，否则显示所有内容
-	#如果mmi等于lensp，表明所有搜索词都在这一行。
+	#如果第一个搜索词为l(l即是line)，只显示一行
+	#如果第一个搜索词为m(m即是单词名)，只显示单词名
+	#否则显示所有内容
+	#如果mmi等于lensp-1，表明所有搜索词都找到了。
 
 	foreach {id ming neirong}  $x {
 		if {$ii==1} {
-			#1.拆分neirong，
+			
+			if {$xii=="l"} {
+			set strline ""	
+			#1.拆分neirong为很多句子，
 			set flst [ split $neirong "\r\n"]
 			
 			#2.遍历flst，找出有搜索词的内容。
@@ -200,20 +228,46 @@ proc search {sename} {
 					
 				#如果在一句中有所有搜索词
 				if {$mmi==[expr $lensp-1]} {
-					.f.t insert end "\nid:\t$id \nMing:\n$ming \nfi:\n$fi\n\n"			
+					#.f.t insert end "\nid:\t$id \nMing:\t$ming \nfi:\n$fi\n\n"
+				set strline [string cat $strline "\n$fi"]
 				}
 			}
+			#一次显示一个记录里的所有适合的句子。
+			if {$strline!=""} {
+				.f.t insert end "\nid:\t$id \nMing:\t$ming \nfi:$strline\n\n"
+			}
+			};#$xii=="l"
+			
+			if {$xii=="m"} {
+				foreach fm $ming {
+				#如果每个搜索词都在这一句当中。
+					set mmi 0
+					for {set i $ii} {$i<$lensp} {incr i} {
+						#得到一个搜索词tmp
+						set tmp [lindex $sp $i]
+						if {[string first $tmp $fm 0 ]!=-1} {
+							incr mmi 
+						} 
+							
+					} 
+						
+					#如果在一句中有所有搜索词
+					if {$mmi==[expr $lensp-1]} {
+						.f.t insert end "\nid:\t$id\nMing:$fm\n"
+					}
+				} ;#foreach fm
+			};#$xii=="m"
 		} else {
-			.f.t insert end "\nid:\t$id \nMing:\n$ming \nNeiRong:\n$neirong\n\n"
+			.f.t insert end "\nid:\t$id \nMing:\t$ming \nNeiRong:\n$neirong\n\n"
 		} 		
-	}
+	};#$x
 	.f.ltitle configure -text "Title   $et"
 	
 	gaoliang $ii $sp $lensp
     };#$et != ""
 }
 
-#ii：当搜索词第一个是l (即line)时，ii=1,否则为0，
+#ii：当搜索词第一个是l (即line)或为m（m为单词名）时，ii=1,否则为0，
 #sp为搜索词， lensp为搜索词个数，sp与lensp都是去掉ii后的数。
 proc gaoliang {ii sp lensp} {
 
@@ -537,10 +591,12 @@ proc deleteriwen {} {
 }
 
 
+
 #程序功能：
 #Control-t 随机得到一句单词，
-#Control-f 搜索单词，
-#l+搜索词，Control-l可以搜索单个句子。
+#Control-f 搜索单词名和内容，
+#l+搜索词，Control-l只搜索单词内容中的句子。
+#m+搜索词，Control-m只搜索单词名。
 #Control-i 添加单词到数据库
 #Control-u 更新数据库中的内容。
 #Control-k 删除.f.t中输入日文单字时，其中的中文拼音符号，如ā á ǎ à ō 等，保存在words.txt文件中。
