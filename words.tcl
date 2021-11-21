@@ -79,9 +79,7 @@ initial
 
 
 
-#按回车键时调用show函数。
-bind .f1.e <<Enter1>> {show}
-event add <<Enter1>> <Return>
+
 
 
 #insert
@@ -384,11 +382,11 @@ bind .f.t  <Control-t> {
 
 
 #更新数据库
-#Control-u，先在.f1.e中输入要更新的id号(整数)，
+#在底部输入框中输入数字并按回车键 更新数据库中的内容。先在.f1.e中输入要更新的id号(整数)，
 #建立toplevel级别的界面
 #单击更新按钮，保存
 
-bind .f1.e  <Control-u> {
+bind .f1.e  <Return> {
     #获取总记录数sums
     set sums [db eval {select count() from words;}]
     
@@ -502,11 +500,13 @@ proc update1 {} {
    }
 }
 
-
+#按Press按钮时调用show函数。
 
 #显示.f1.e中的字符串
 proc show {} {
 
+
+	return;
 	#获取输入框.f1.e中的字符串
 	set et  [string trim [.f1.e get]	]
 	
@@ -598,7 +598,7 @@ proc deleteriwen {} {
 #l+搜索词，Control-l只搜索单词内容中的句子。
 #m+搜索词，Control-m只搜索单词名。
 #Control-i 添加单词到数据库
-#Control-u 更新数据库中的内容。
+#在底部输入框中输入数字并按回车键 更新数据库中的内容。
 #Control-k 删除.f.t中输入日文单字时，其中的中文拼音符号，如ā á ǎ à ō 等，保存在words.txt文件中。
 
 #所需程序

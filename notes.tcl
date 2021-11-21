@@ -81,9 +81,6 @@ initial
 
 
 
-#按回车键时调用show函数。
-bind .f1.e <<Enter1>> {show}
-event add <<Enter1>> <Return>
 
 
 #insert
@@ -335,11 +332,11 @@ bind .f.t  <Control-t> {
 
 
 #更新数据库
-#Control-u，先在.f1.e中输入要更新的id号(整数)，
+#在底部输入框中输入数字并按回车键 更新数据库中的内容。先在.f1.e中输入要更新的id号(整数)，
 #建立toplevel级别的界面
 #单击更新按钮，保存
 
-bind .f1.e  <Control-u> {
+bind .f1.e  <Return> {
     #获取总记录数sums
     set sums [db eval {select count() from notes;}]
     
@@ -453,6 +450,7 @@ proc update1 {} {
 
 
 
+#按Press按钮时调用show函数。
 
 
 #显示.f1.e中的字符串
@@ -513,7 +511,7 @@ proc ResizeJiemian {Window} {
 #Control-f 搜索笔记，
 #l+搜索词，Control-l可以搜索单个句子。
 #Control-i 添加笔记到数据库
-#Control-u 更新数据库中的内容。
+#在底部输入框中输入数字并按回车键 更新数据库中的内容。
 #所需程序
 #两个
 #一、notes.tcl ，tcl语言程序
