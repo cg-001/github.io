@@ -7,33 +7,18 @@ cd $gzml
 package require sqlite3
 sqlite3 db shici.db
 
-#得到总记录数，sums
-set sums [db eval {select count() from shici;}]
-
-#去掉不需要记忆(已经记得非常熟悉)的诗词，
-#在插入control_i及control_t函数中。
-#glst存放需要记忆(记得不熟悉)的id号
-source -encoding  utf-8 shici.txt
-if {[llength $shiciId!=0]} {
-    #set i 1，因为sqlite中第一个记录id值为1
-    for {set i 1} {$i<=$sums} {incr i} {
-	set tmpId [lsearch $shiciId $i]
-	if {$tmpId ==-1} {
-	    lappend glst $i
-	}
-    }	
-}
 
 #初始化
 proc initial {} {
 
     #shiciname：id、诗词名称、朝代、作者
     #shicineirong：内容 
-    db eval {create table IF NOT EXISTS shici (
-					       id INTEGER PRIMARY KEY ASC,\
-						   shiciname varchar(30) NOT NULL,\
-						   shicineirong text NOT NULL
-					       );
+    db eval {
+		create table IF NOT EXISTS shici (
+	      id INTEGER PRIMARY KEY ASC,\
+		  shiciname varchar(30) NOT NULL,\
+		  shicineirong text NOT NULL
+		  );
     }
     
     #电脑屏幕分辨率
@@ -48,45 +33,31 @@ proc initial {} {
     wm geometry . ${mwidth}x${mheight}+150+150  ;#窗口左上角在150.150处。
 
     #标题：皮皮诗词
-    set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe8\xaf\x97\xe8\xaf\x8d";
-    set tt [encoding convertfrom  utf-8 $tstr]
-    wm title . "$tt pipi.shici windows ver 1.00110"
+ #   set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe8\xaf\x97\xe8\xaf\x8d";
+
+ #   set tt [encoding convertfrom  utf-8 $tstr]
+	set tt "\u76ae\u76ae\u8bd7\u8bcd\ue006\ue00d"
+    wm title . "$tt pipi.shici windows ver 1.01000"
 
 
 
-    set upframe [frame .f -width $mwidth -height $mheight ;]
-    set uptitle [label .f.ltitle -text "title"]
+    frame .f -width $mwidth -height $mheight ;
+    label .f.ltitle -text "title"
 
     font create textfont -size 26 -weight bold
 
-    set upttext [text .f.t  -width 43 -height 15 -bg grey70 -font textfont  -undo true -yscrollcommand { .f.scroll set } ]
+    text .f.t  -width 43 -height 15 -bg grey70 -font textfont  -spacing1 5 -undo true -yscrollcommand { .f.scroll set } 
     #-width 43 -height 15text长宽为15与43个字符的宽度。
 
-    set upscrollbar [scrollbar .f.scroll -command { .f.t yview }]
+    scrollbar .f.scroll -command { .f.t yview }
 
-    set bottomFrame [frame .f1]
+    frame .f1
+    label .f1.l -text "Enter:" 
 
-    set bottoml [label .f1.l -text "Enter:" ]
 
+    entry .f1.e -width 80
 
-    set bottome [entry .f1.e -width 80]
-
-    set bottomBPress [button .f1.b -text "Press" -command show]
-
-    #当单击时改变组件的颜色
-    global flag
-    set flag 0
-    global color
-    set color {purple	"rosy brown" red blue black green SteelBlue  CadetBlue chocolate coral  "dark blue" orchid  navy burlywood }
-    global colorZhujian
-    set colorZhujian {.f.ltitle .f1.l .f1.e .f1.b}
-    bind . <KeyPress> {
-	set flag [expr int(rand()*[llength $colorZhujian])]
-	set color1 [expr int(rand()*[llength $color])]
-	
-	set strCZ [lindex $colorZhujian $flag ]
-	$strCZ configure -fg [ lindex $color $color1]		
-    };#bind
+    button .f1.b -text "Press" -command show
 
 }
 
@@ -94,7 +65,60 @@ proc initial {} {
 initial
 
 
+set ddd [db eval {select * from shici;}]
+if { $ddd != ""} {
 
+#得到总记录数，sums
+
+set sums [db eval {select count() from shici;}]
+
+#去掉不需要记忆(已经记得非常熟悉)的诗词，
+#在插入control_i及control_t函数中。
+#glst存放需要记忆(记得不熟悉)的id号
+#shiciId在shici.txt中定义,表示非常熟的诗词。
+set glst []
+if {$sums != 0 } {
+source -encoding  utf-8 shici.txt
+if {[llength $shiciId!=0]} {
+    #set i 1，因为sqlite中第一个记录id值为1
+    for {set i 1} {$i<=$sums} {incr i} {
+	set tmpId [lsearch $shiciId $i]
+	if {$tmpId ==-1} {
+	    lappend glst $i
+	}
+    }	
+}
+} 
+
+} else {
+	set sums 0
+	set glst []
+}
+
+
+
+bind . <KeyPress> {
+	#当单击时改变组件的颜色
+	chcolor
+}
+
+proc chcolor {} {
+
+	#global flag
+	set flag 0
+	#global color
+	set color {purple	"rosy brown" red blue black green SteelBlue orchid chocolate}
+#	global colorZhujian
+	set colorZhujian {.f.ltitle .f1.l .f1.e .f1.b}
+
+	set flag [expr int(rand()*[llength $colorZhujian])]
+	set color1 [expr int(rand()*[llength $color])]
+	
+	set strCZ [lindex $colorZhujian $flag ]
+	$strCZ configure -fg [ lindex $color $color1]
+
+
+}
 
 
 #insert
@@ -429,7 +453,7 @@ proc update0 {} {
     
     label .tplupdate.f.ltitle 
     
-    text .tplupdate.f.t -width 40 -height 12 -bg grey70 -font textfont  -undo true -yscrollcommand { .tplupdate.f.scroll set } 
+    text .tplupdate.f.t -width 40 -height 12 -bg grey70 -font textfont  -spacing1 25 -undo true -yscrollcommand { .tplupdate.f.scroll set } 
     scrollbar .tplupdate.f.scroll -command { .tplupdate.f.t yview }
 
     frame .tplupdate.f1
