@@ -37,24 +37,24 @@ proc initial {} {
 	set tt "\u76ae\u76ae\u5355\u8bcd\ue006\ue00d"
     wm title . "$tt pipi.words recite windows ver 1.01000"
 
+	#主界面
+	frame .f -width $mwidth -height $mheight ;
+	label .f.ltitle -text "title"
 
-    frame .f -width $mwidth -height $mheight ;
-    label .f.ltitle -text "title"
+	font create textfont -size 26 -weight bold 
 
-    font create textfont -size 26 -weight bold 
+	text .f.t  -width 43 -height 15 -bg grey70 -font textfont  -spacing1 5 -undo true -yscrollcommand { .f.scroll set } 
+	#-width 43 -height 15text长宽为15与43个字符的宽度。
 
-    text .f.t  -width 43 -height 15 -bg grey70 -font textfont  -spacing1 5 -undo true -yscrollcommand { .f.scroll set } 
-    #-width 43 -height 15text长宽为15与43个字符的宽度。
+	scrollbar .f.scroll -command { .f.t yview }
 
-    scrollbar .f.scroll -command { .f.t yview }
-
-    frame .f1
-    label .f1.l -text "Enter:" 
+	frame .f1
+	label .f1.l -text "Enter:" 
 
 
-    entry .f1.e -width 80
+	entry .f1.e -width 80
 
-    button .f1.b -text "Press" -command show
+	button .f1.b -text "Press" -command show
 
 	
 }
@@ -62,12 +62,14 @@ proc initial {} {
 
 ## 调用初始化函数来初始化界面。
 initial
+
 ## 当单击时改变组件的颜色
 bind . <KeyPress> {
 	
 	chcolor
 }
-## chcolor
+
+## 改变组件字体颜色
 proc chcolor {} {
 
 	#global flag
@@ -89,7 +91,7 @@ proc chcolor {} {
 
 
 
-## insert
+## insert插入到数据库
 bind .f1.e <Control-i> {
 
     set name  [string trim [.f1.e get]	]  ;#id、单词
@@ -118,162 +120,126 @@ bind .f1.e <Control-i> {
 
 ## 搜索一个记录
 bind .f1.e <Control-f> {
-	#获取搜索内容
-    set et [string trim [.f1.e get]	]
-    if {$et!=""} {
-		search $et
-	}
+	#获取搜索内容，去掉搜索词两头的空格。
+	set et [string trim [.f1.e get]]
+	search $et whole
 }
 
 
 ## 只搜索内容中的一行
 bind .f1.e <Control-l> {
-	#获取搜索内容
-    set et [string trim [.f1.e get]	]
-    if {$et!=""} {
-		set et "l $et"	
-		search  $et
-	}
+	#获取搜索内容，去掉搜索词两头的空格。
+	set et [string trim [.f1.e get] ]
+	search $et line
 }
 
-## 只搜索单词名
+## 只搜索wordsname
 bind .f1.e <Control-m> {
 	#获取搜索内容
-    set et [string trim [.f1.e get]	]
-    if {$et!=""} {
-		set et "m $et"	
-		search  $et
-	}
+	set et [string trim [.f1.e get] ]
+	search  $et mulu
+
 }
 
 
 ## 多词搜索一个记录
+#一是读取数据库记录，
+#二是利用tag高亮显示搜索词。
 #多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
-#利用tag高亮度显示搜索词。
-#增加一个只列出有搜索单词的句子功能，et中第一个词为l(l即是line)(小L)时，
-proc search {sename} {
+#type=whole，显示有搜索词的整个记录， 
+#type=line，显示有搜索词的一行。
+#type=mulu，显示wordsname。
+
+proc search {sename type} {
 	
-	set et $sename
 	
-	#把名字里面的回车换行符去掉，
-	set et [string map {"\r\n"  "" }  $et]
-	
-	set sp ""
-	
-    if {$et != ""}  {
-	
-	#拆分split搜索内容
-	set x1 [split $et " "]
-	
-	#把sp里面的空值去掉。
-	 foreach i $x1 {
-		if {$i!=""} {lappend sp $i}
-	}
-	
-	set lensp [llength $sp]
-	
-	set str "";#str作为搜索字段	
-	
-	#如果第一个搜索词为l(l即是line)(小L)，
-	#或为m,m表示搜索单词名，
-	
-	#ii为下面for中i的起始值。
-	set xii [lindex $sp 0]
-	if {$xii=="l" || $xii=="m"} {
-		set ii 1
-		#set lensp [expr $lensp-1]
-	} else {set ii 0}
-	
-	#把搜索词放入sql语句中。
-	for {set i $ii} {$i<$lensp} {incr i} {
-		set tmp [lindex $sp $i]
-		#把单引号修改为\'，因为sql中单引号有特殊用途，不改会错。
-		set tmp [string map {'  '' }  $tmp]
-		if {$i<[expr $lensp-1]} {
-			set str "$str (wordsname like '%$tmp%' OR wordsneirong like '%$tmp%' ) AND "
+	set str ""
+	set i 0
+	#得到sql语句
+	foreach tmp $sename {
+		if { $i eq 0} {
+		append str "( wordsname like '%$tmp%' OR wordsneirong like '%$tmp%' ) "
 		} else {
-			set str "$str ( wordsname like '%$tmp%' OR wordsneirong like '%$tmp%' ) "
+		append str " AND  ( wordsname like '%$tmp%' OR wordsneirong like '%$tmp%' ) "
 		}
+		incr i
 	}
+
+
 
 	#x表示搜索值。
-	if {$str!=""} {
 	set x [db eval "select * from words where $str"]
-	} else {
-		.f.t insert end "Search words couldn't find\n"
-		return
-	}
-	
-	#在.f.t中显示搜索内容
-	#如果第一个搜索词为l(l即是line)，只显示一行
-	#如果第一个搜索词为m(m即是单词名)，只显示单词名
-	#否则显示所有内容
-	#如果mmi等于lensp-1，表明所有搜索词都找到了。
 
-	foreach {id ming neirong}  $x {
-		if {$ii==1} {
+	#根据whole，line来显示整个或一行记录
+	# 先保存入showStr
+	set showStr ""
+	switch $type {
+		mulu {
+			foreach {id ming neirong}  $x {
+			if { [string first $sename $ming 0] ne -1 } {
+set showStr "$showStr\nID:$id\nMing:$ming\n\n\n"}
+			}
+		}
+
+		whole {
+			foreach {id ming neirong}  $x {
+			set showStr "$showStr\nID:$id\nMing:$ming\nNeirong:\n$neirong\n\n\n"
+			}
+		}
+
+
+		line {
+			foreach {id ming neirong}  $x {
 			
-			if {$xii=="l"} {
-			set strline ""	
-			#1.拆分neirong为很多句子，
-			set flst [ split $neirong "\r\n"]
-			
-			#2.遍历flst，找出有搜索词的内容。
-			foreach fi $flst {			
-				#如果每个搜索词都在这一句当中。
-				set mmi 0
-				for {set i $ii} {$i<$lensp} {incr i} {
-					#得到一个搜索词tmp
-					set tmp [lindex $sp $i]
-					if {[string first $tmp $fi 0 ]!=-1} {
-						incr mmi 
-					} 
-						
-				} 
+				#拆分neirong为句子，放入列表nrStr中
+				set Lnr [split $neirong "\r\n"]
+				
+				set tmp ""
+				#去掉空格
+				foreach x $Lnr {
+					if {$x ne ""} {
+					lappend tmp $x
+					}
+				}
+				
+				set lb ""
+				set lc ""
+				set la $tmp
+
 					
-				#如果在一句中有所有搜索词
-				if {$mmi==[expr $lensp-1]} {
-					#.f.t insert end "\nid:\t$id \nMing:\t$ming \nfi:\n$fi\n\n"
-				set strline [string cat $strline "\n$fi"]
+				#比较搜索词
+				foreach x $sename {
+				
+					foreach y $la {	
+					
+						if { [string first $x  $y 0 ] ne -1 } {
+					
+							lappend lb $y
+						}
+					}
+				
+				set lc ""
+				set lc $lb
+				
+				set lb ""
+				set la ""
+				set la $lc
+				}
+				foreach x $lc {
+				set showStr "$showStr\nID:$id\nMing:$ming\nNeirong:\n$x\n\n\n"
+				}
 				}
 			}
-			#一次显示一个记录里的所有适合的句子。
-			if {$strline!=""} {
-				.f.t insert end "\nid:\t$id \nMing:\t$ming \nfi:$strline\n\n"
-			}
-			};#$xii=="l"
-			
-			if {$xii=="m"} {
-				foreach fm $ming {
-				#如果每个搜索词都在这一句当中。
-					set mmi 0
-					for {set i $ii} {$i<$lensp} {incr i} {
-						#得到一个搜索词tmp
-						set tmp [lindex $sp $i]
-						if {[string first $tmp $fm 0 ]!=-1} {
-							incr mmi 
-						} 
-							
-					} 
-						
-					#如果在一句中有所有搜索词
-					if {$mmi==[expr $lensp-1]} {
-						.f.t insert end "\nid:\t$id\nMing:$fm\n"
-					}
-				} ;#foreach fm
-			};#$xii=="m"
-		} else {
-			.f.t insert end "\nid:\t$id \nMing:\t$ming \nNeiRong:\n$neirong\n\n"
-		} 		
-	};#$x
-	.f.ltitle configure -text "Title   $et"
-	
+	}
+
+
+	.f.t insert end $showStr
+
 	#高亮主界面中的搜索词
 	highlight .
 
-    };#$et != ""
+		
 }
-
 
 ## 出题 
 #1.得到总记录数，
@@ -562,14 +528,23 @@ proc highlight Window {
 		set se e0
 	}
 	}
+
+	#删除tags
+	set tag1 [$Window.f.t tag names]
+	if {$tag1 ne ""} {
+		foreach x $tag1 {
+			if {$tag1 ne "SEL"} {
+				$Window.f.t tag delete $x
+			}
+		}
+	}
+
 	#得到搜索词searchstr
 	#得到一个或多个搜索词，只用一个的
 	set searchstr [string trim [$Window.f1.$se get]]
 	foreach sx $searchstr {
 	#得到搜索的所有索引index，利用text组件的search
 	set la [$Window.f.t search -forwards -all $sx 1.0 end]
-	#$Window.f.t insert 1.0 "la$la"
-	#给.f.t添加一个tag，用来高亮文字。
 
 	set len [string length $sx];#得到搜索词长度
 	
@@ -581,7 +556,7 @@ proc highlight Window {
 	foreach {y z} $lx {
 	set len1 [expr $z+$len]
 	$Window.f.t tag add tags$y$z $x $y.$len1
-	$Window.f.t tag configure tags$y$z -background red -foreground black
+	$Window.f.t tag configure tags$y$z -background red -foreground black  -borderwidth 2 -relief raised
 	}
 	}
 

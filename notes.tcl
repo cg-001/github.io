@@ -36,7 +36,7 @@ proc initial {} {
 	set tt "\u76ae\u76ae\u7b14\u8bb0\ue006\ue00d"
 	wm title . "$tt pipi.notes windows ver 1.00110"
 
-
+	#主界面
 	frame .f -width $mwidth -height $mheight ;
 	label .f.ltitle -text "title"
 
@@ -124,7 +124,7 @@ bind .f1.e <Control-f> {
 bind .f1.e <Control-l> {
 #获取搜索内容，去掉搜索词两头的空格。
 	set et [string trim [.f1.e get]]
-	search  $et line
+	search $et line
 
 }
 
@@ -533,26 +533,37 @@ proc highlight Window {
 		set se e0
 	}
 	}
+
+	#删除tags
+	set tag1 [$Window.f.t tag names]
+	if {$tag1 ne ""} {
+		foreach x $tag1 {
+			if {$tag1 ne "SEL"} {
+				$Window.f.t tag delete $x
+			}
+		}
+	}
+
 	#得到搜索词searchstr
 	#得到一个或多个搜索词，只用一个的
 	set searchstr [string trim [$Window.f1.$se get]]
 	foreach sx $searchstr {
 	#得到搜索的所有索引index，利用text组件的search
 	set la [$Window.f.t search -forwards -all $sx 1.0 end]
-	#$Window.f.t insert 1.0 "la$la"
-	#给.f.t添加一个tag，用来高亮文字。
 
 	set len [string length $sx];#得到搜索词长度
-	
+
 	#得到.f.t tag 位置，x的形式为x.y，x为行，y为列。
 	foreach x $la {	
+
 	#分解x
 	set lx [split $x .]
+
 	#高亮显示搜索词
 	foreach {y z} $lx {
 	set len1 [expr $z+$len]
 	$Window.f.t tag add tags$y$z $x $y.$len1
-	$Window.f.t tag configure tags$y$z -background red -foreground black
+	$Window.f.t tag configure tags$y$z -background red -foreground black -borderwidth 2 -relief raised
 	}
 	}
 
