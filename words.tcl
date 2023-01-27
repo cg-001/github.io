@@ -8,16 +8,17 @@ package require sqlite3
 sqlite3 db words.db
 
 
-#初始化
+## 初始化
 proc initial {} {
 
 	#wordsname：id、单词名称
 	#wordsneirong：内容    
-	db eval {create table IF NOT EXISTS words (
-			 id INTEGER PRIMARY KEY ASC,\
-				 wordsname varchar(30) NOT NULL,\
-				 wordsneirong text NOT NULL
-			 );
+	db eval {
+	create table IF NOT EXISTS words (
+		id INTEGER PRIMARY KEY ASC,\
+		wordsname varchar(30) NOT NULL,\
+		wordsneirong text NOT NULL
+		 );
     }
     #电脑屏幕分辨率
     set xsw [winfo screenwidth .]
@@ -31,58 +32,64 @@ proc initial {} {
     wm geometry . ${mwidth}x${mheight}+150+150  ;#窗口左上角在150.150处。
 
     #标题：皮皮单词
-    set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe5\x8d\x95\xe8\xaf\x8d ";
-    set tt [encoding convertfrom  utf-8 $tstr]
-    wm title . "$tt pipi.words recite windows ver 1.00111"
+ #   set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe5\x8d\x95\xe8\xaf\x8d ";
+ #   set tt [encoding convertfrom  utf-8 $tstr]
+	set tt "\u76ae\u76ae\u5355\u8bcd\ue006\ue00d"
+    wm title . "$tt pipi.words recite windows ver 1.01000"
 
 
+    frame .f -width $mwidth -height $mheight ;
+    label .f.ltitle -text "title"
 
-    set upframe [frame .f -width $mwidth -height $mheight ;]
-    set uptitle [label .f.ltitle -text "title"]
+    font create textfont -size 26 -weight bold 
 
-    font create textfont -size 26 -weight bold
-
-    set upttext [text .f.t  -width 43 -height 15 -bg grey70 -font textfont  -undo true -yscrollcommand { .f.scroll set } ]
+    text .f.t  -width 43 -height 15 -bg grey70 -font textfont  -spacing1 5 -undo true -yscrollcommand { .f.scroll set } 
     #-width 43 -height 15text长宽为15与43个字符的宽度。
 
-    set upscrollbar [scrollbar .f.scroll -command { .f.t yview }]
+    scrollbar .f.scroll -command { .f.t yview }
+
+    frame .f1
+    label .f1.l -text "Enter:" 
 
 
-    set bottomFrame [frame .f1  ]
+    entry .f1.e -width 80
 
-    set bottoml [label .f1.l -text "Enter:" ]
+    button .f1.b -text "Press" -command show
+
+	
+}
 
 
-    set bottome [entry .f1.e -width 80]
+## 调用初始化函数来初始化界面。
+initial
+## 当单击时改变组件的颜色
+bind . <KeyPress> {
+	
+	chcolor
+}
+## chcolor
+proc chcolor {} {
 
-    set bottomBPress [button .f1.b -text "Press" -command show]
-
-	#当单击时改变组件的颜色
-	global flag
+	#global flag
 	set flag 0
-	global color
+	#global color
 	set color {purple	"rosy brown" red blue black green SteelBlue orchid chocolate}
-	global colorZhujian
+#	global colorZhujian
 	set colorZhujian {.f.ltitle .f1.l .f1.e .f1.b}
-	bind . <KeyPress> {
-		set flag [expr int(rand()*[llength $colorZhujian])]
-		set color1 [expr int(rand()*[llength $color])]
-		
-		set strCZ [lindex $colorZhujian $flag ]
-		$strCZ configure -fg [ lindex $color $color1]
-	};#bind
+
+	set flag [expr int(rand()*[llength $colorZhujian])]
+	set color1 [expr int(rand()*[llength $color])]
+	
+	set strCZ [lindex $colorZhujian $flag ]
+	$strCZ configure -fg [ lindex $color $color1]
+
 
 }
 
-#调用初始化函数来初始化界面。
-initial
 
 
 
-
-
-
-#insert
+## insert
 bind .f1.e <Control-i> {
 
     set name  [string trim [.f1.e get]	]  ;#id、单词
@@ -109,7 +116,7 @@ bind .f1.e <Control-i> {
 }
 
 
-#搜索一个记录
+## 搜索一个记录
 bind .f1.e <Control-f> {
 	#获取搜索内容
     set et [string trim [.f1.e get]	]
@@ -119,7 +126,7 @@ bind .f1.e <Control-f> {
 }
 
 
-#只搜索内容中的一行
+## 只搜索内容中的一行
 bind .f1.e <Control-l> {
 	#获取搜索内容
     set et [string trim [.f1.e get]	]
@@ -129,7 +136,7 @@ bind .f1.e <Control-l> {
 	}
 }
 
-#只搜索单词名
+## 只搜索单词名
 bind .f1.e <Control-m> {
 	#获取搜索内容
     set et [string trim [.f1.e get]	]
@@ -140,7 +147,7 @@ bind .f1.e <Control-m> {
 }
 
 
-#搜索一个记录
+## 多词搜索一个记录
 #多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
 #利用tag高亮度显示搜索词。
 #增加一个只列出有搜索单词的句子功能，et中第一个词为l(l即是line)(小L)时，
@@ -261,62 +268,14 @@ proc search {sename} {
 	};#$x
 	.f.ltitle configure -text "Title   $et"
 	
-	gaoliang $ii $sp $lensp
+	#高亮主界面中的搜索词
+	highlight .
+
     };#$et != ""
 }
 
-#ii：当搜索词第一个是l (即line)或为m（m为单词名）时，ii=1,否则为0，
-#sp为搜索词， lensp为搜索词个数，sp与lensp都是去掉ii后的数。
-proc gaoliang {ii sp lensp} {
 
-	#得到当前text的总行数
-	set lines [.f.t count -displaylines 1.0 end]
-	
-	#高亮度显示搜索词。
-	#i代表搜索词的个数，以空格来分开。
-	#j代表.f.t中的行数，行数从1-end。
-	#k代表搜索词在.f.t中每一行的字符串里的位置。
-	for {set i $ii} {$i<$lensp} {incr i} {
-		set tmp [lindex $sp $i];#搜索词
-
-		#获取搜索词长度
-		set lentmp [string length $tmp]
-		
-		for {set j 1} {$j<=$lines} {incr j}  {
-			#得到每一行的字符串linestr
-			set linestr [.f.t get $j.0 $j.end] 
-			#每一行字符串的长度lenlinestr
-			set lenlinestr [string length $linestr]
-			
-			set k 0
-			while {$k<$lenlinestr} {
-				#获取搜索词位置
-				set tmplocation [string first $tmp  $linestr $k]
-				
-				if {$tmplocation!=-1} {
-				#==-1表示没有找到
-				
-				#高亮度搜索词
-				set tagx tag$i$j
-				#.f.t insert end "\ntagx tag$i$j\n"
-				
-				#k搜索词所在位置
-				set k [expr $tmplocation+$lentmp]
-				
-				.f.t tag add $tagx \
-					$j.$tmplocation $j.$k
-				.f.t tag configure $tagx -background red -foreground black	
-				} else {
-					break
-				}
-			};#while k
-		};#for j
-	};#for i
-}
-
-
-
-#出题 
+## 出题 
 #1.得到总记录数，
 #2.得到一个随机数，
 #并用select 得到这个记录，并显示在组件text中
@@ -381,7 +340,7 @@ bind .f.t  <Control-t> {
 }
 
 
-#更新数据库
+## 更新数据库
 #在底部输入框中输入数字并按回车键 更新数据库中的内容。先在.f1.e中输入要更新的id号(整数)，
 #建立toplevel级别的界面
 #单击更新按钮，保存
@@ -405,7 +364,7 @@ bind .f1.e  <Return> {
 
 
 
-#显示更新界面
+## 显示更新界面
 proc update0 {} {
 
     toplevel .tplupdate 
@@ -415,7 +374,7 @@ proc update0 {} {
     
     label .tplupdate.f.ltitle 
     
-    text .tplupdate.f.t -width 40 -height 12 -bg grey70 -font textfont  -undo true -yscrollcommand { .tplupdate.f.scroll set } 
+    text .tplupdate.f.t -width 40 -height 12 -bg grey70 -font textfont  -spacing1 25 -undo true -yscrollcommand { .tplupdate.f.scroll set } 
     scrollbar .tplupdate.f.scroll -command { .tplupdate.f.t yview }
 
 	frame .tplupdate.f1 
@@ -460,7 +419,7 @@ proc update0 {} {
     }	
 }
 
-#保存更新内容
+## 保存更新内容
 proc update1 {} {
     #获取要更新的记录的id号(整数)	，
     set id [string trim [.tplupdate.f1.l cget -text]	]
@@ -500,7 +459,7 @@ proc update1 {} {
    }
 }
 
-#按Press按钮时调用show函数。
+## 按Press按钮时调用show函数。
 
 #显示.f1.e中的字符串
 proc show {} {
@@ -522,12 +481,12 @@ proc show {} {
 }
 
 
-#动态修改程序大小
+## 动态修改程序大小
 bind . <Configure> {	
 	ResizeJiemian .
 }
 
-#动态改变窗口
+## 动态改变窗口
 proc ResizeJiemian {Window} {
 #当前窗口尺寸
 	set hei [winfo  height $Window]
@@ -557,11 +516,11 @@ proc ResizeJiemian {Window} {
     place $Window.f1.b -x [expr $wid-$labelwidth-2] -rely 0.001 -width $labelwidth -height  $labelheight
 
 }
-
+## 整理单词格式
 bind .f.t <Control-k>  {
 	deleteriwen
 }
-#删除.f.t中所有中文字母符号，如ā á ǎ à ō 等，
+## 删除.f.t中所有中文字母符号，如ā á ǎ à ō 等，
 proc deleteriwen {} {
 	#得到.f.t中所有字符串
 	set delstr [.f.t get -displaychars 1.0 end ;]
@@ -591,8 +550,47 @@ proc deleteriwen {} {
 }
 
 
+## 高亮显示搜索词proc
+proc highlight Window {
+	#如果调用程序为主界面时，把Window变成空值
+	switch $Window {
+	. {
+		set Window ""
+		set se e
+	}
+	.tplupdate {
+		set se e0
+	}
+	}
+	#得到搜索词searchstr
+	#得到一个或多个搜索词，只用一个的
+	set searchstr [string trim [$Window.f1.$se get]]
+	foreach sx $searchstr {
+	#得到搜索的所有索引index，利用text组件的search
+	set la [$Window.f.t search -forwards -all $sx 1.0 end]
+	#$Window.f.t insert 1.0 "la$la"
+	#给.f.t添加一个tag，用来高亮文字。
 
-#程序功能：
+	set len [string length $sx];#得到搜索词长度
+	
+	#得到.f.t tag 位置，x的形式为x.y，x为行，y为列。
+	foreach x $la {	
+	#分解x
+	set lx [split $x .]
+	#高亮显示搜索词
+	foreach {y z} $lx {
+	set len1 [expr $z+$len]
+	$Window.f.t tag add tags$y$z $x $y.$len1
+	$Window.f.t tag configure tags$y$z -background red -foreground black
+	}
+	}
+
+	}
+}
+
+
+
+## 程序功能：
 #Control-t 随机得到一句单词，
 #Control-f 搜索单词名和内容，
 #l+搜索词，Control-l只搜索单词内容中的句子。

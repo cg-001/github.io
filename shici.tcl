@@ -5,10 +5,10 @@ set gzml [file dirname [ file nativename  [info script]]]
 cd $gzml
 
 package require sqlite3
-sqlite3 db shici.db
+sqlite3 db ./shici.db
 
 
-#初始化
+## 初始化
 proc initial {} {
 
     #shiciname：id、诗词名称、朝代、作者
@@ -61,15 +61,13 @@ proc initial {} {
 
 }
 
-#调用初始化函数来初始化界面。
+## 调用初始化函数来初始化界面。
 initial
 
-
+## ddd
 set ddd [db eval {select * from shici;}]
 if { $ddd != ""} {
-
 #得到总记录数，sums
-
 set sums [db eval {select count() from shici;}]
 
 #去掉不需要记忆(已经记得非常熟悉)的诗词，
@@ -96,9 +94,9 @@ if {[llength $shiciId!=0]} {
 }
 
 
-
+## 当单击时改变组件的颜色
 bind . <KeyPress> {
-	#当单击时改变组件的颜色
+	
 	chcolor
 }
 
@@ -121,7 +119,7 @@ proc chcolor {} {
 }
 
 
-#insert
+## insert
 bind .f1.e <Control-i> {
 
     set name  [string trim [.f1.e get]	]  ;#id、诗词名称、朝代、作者
@@ -177,7 +175,7 @@ proc isShoulu {strNeirong} {
 }
 
 
-#搜索一个记录
+## 搜索一个记录
 bind .f1.e <Control-f> {
     #取消飞花令状态
     set isfeihualist 0
@@ -188,7 +186,7 @@ bind .f1.e <Control-f> {
     }
 }
 
-#搜索一行
+## 搜索一行
 bind .f1.e <Control-l> {
     #获取搜索内容
     set et [string trim [.f1.e get]	]
@@ -199,7 +197,7 @@ bind .f1.e <Control-l> {
 }
 
 
-#搜索一个记录
+## 多词搜索一个记录
 #多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
 #利用tag高亮度显示搜索词。
 #增加一个只列出有搜索单词的句子功能，et中第一个词为l(l即是line)(小L)时，
@@ -293,61 +291,14 @@ proc search {sename} {
 	
 	.f.ltitle configure -text "Title   $et"
 	
-	gaoliang $ii $sp $lensp
+	#高亮主界面中的搜索词
+	highlight .
+
     };#$et != ""
 }
 
-#ii：当搜索词第一个是l (即line)时，ii=1,否则为0，
-#sp为搜索词， lensp为搜索词个数，sp与lensp都是去掉ii后的数。
-proc gaoliang {ii sp lensp} {
 
-    #得到当前text的总行数
-    set lines [.f.t count -displaylines 1.0 end]
-    
-    #高亮度显示搜索词。
-    #i代表搜索词的个数，以空格来分开。
-    #j代表.f.t中的行数，行数从1-end。
-    #k代表搜索词在.f.t中每一行的字符串里的位置。
-    for {set i $ii} {$i<$lensp} {incr i} {
-	set tmp [lindex $sp $i];#搜索词
-
-	#获取搜索词长度
-	set lentmp [string length $tmp]
-	
-	for {set j 1} {$j<=$lines} {incr j}  {
-	    #得到每一行的字符串linestr
-	    set linestr [.f.t get $j.0 $j.end] 
-	    #每一行字符串的长度lenlinestr
-	    set lenlinestr [string length $linestr]
-	    
-	    set k 0
-	    while {$k<$lenlinestr} {
-		#获取搜索词位置
-		set tmplocation [string first $tmp  $linestr $k]
-		
-		if {$tmplocation!=-1} {
-		    #==-1表示没有找到
-		    
-		    #高亮度搜索词
-		    set tagx tag$i$j
-		    #.f.t insert end "\ntagx tag$i$j\n"
-		    
-		    #k搜索词所在位置
-		    set k [expr $tmplocation+$lentmp]
-		    
-		    .f.t tag add $tagx \
-			$j.$tmplocation $j.$k
-		    .f.t tag configure $tagx -background red -foreground black	
-		} else {
-		    break
-		}
-	    };#while k
-	};#for j
-    };#for i
-}
-
-
-#出题 
+## 出题 
 #1.得到总记录数，
 #2.得到一个随机数，
 #并用select 得到这个记录，并显示在组件text中
@@ -419,7 +370,7 @@ bind .f.t  <Control-t> {
 }
 
 
-#更新数据库
+## 更新数据库
 #在底部输入框中输入数字并按回车键 更新数据库中的内容。先在.f1.e中输入要更新的id号(整数)，
 #建立toplevel级别的界面
 #单击更新按钮，保存
@@ -443,7 +394,7 @@ bind .f1.e  <Return> {
 
 
 
-#显示更新界面
+## 显示更新界面
 proc update0 {} {
 
     toplevel .tplupdate
@@ -498,7 +449,7 @@ proc update0 {} {
     }	
 }
 
-#保存更新内容
+## 保存更新内容
 proc update1 {} {
     #获取要更新的记录的id号(整数)	，
     set id [string trim [.tplupdate.f1.l cget -text]	]
@@ -541,12 +492,12 @@ proc update1 {} {
 
 
 
-#动态修改程序大小
+## 动态修改程序大小
 bind . <Configure> {
     ResizeJiemian .
 }
 
-#动态改变窗口
+## 动态改变窗口
 proc ResizeJiemian {Window} {
     #当前窗口尺寸
     set hei [winfo  height $Window]
@@ -577,7 +528,7 @@ proc ResizeJiemian {Window} {
 
 }
 
-#按Press按钮时调用show函数。
+## 按Press按钮时调用show函数。
 
 #显示.f1.e中的字符串
 #回车键显示飞花令
@@ -661,7 +612,7 @@ proc show {} {
     
 }
 
-#Control-j 诗词飞花令，按Control-j 启动，按回车键输入诗句。
+## Control-j 诗词飞花令，按Control-j 启动，按回车键输入诗句。
 #在标题下面显示飞花令是什么。
 set feihualist ""
 set isfeihualist 0
@@ -725,8 +676,47 @@ bind .f1.e <Control-j>  {
 }
 
 
+## 高亮显示搜索词proc
+proc highlight Window {
+	#如果调用程序为主界面时，把Window变成空值
+	switch $Window {
+	. {
+		set Window ""
+		set se e
+	}
+	.tplupdate {
+		set se e0
+	}
+	}
+	#得到搜索词searchstr
+	#得到一个或多个搜索词，只用一个的
+	set searchstr [string trim [$Window.f1.$se get]]
+	foreach sx $searchstr {
+	#得到搜索的所有索引index，利用text组件的search
+	set la [$Window.f.t search -forwards -all $sx 1.0 end]
+	#$Window.f.t insert 1.0 "la$la"
+	#给.f.t添加一个tag，用来高亮文字。
 
-#程序功能：
+	set len [string length $sx];#得到搜索词长度
+	
+	#得到.f.t tag 位置，x的形式为x.y，x为行，y为列。
+	foreach x $la {	
+	#分解x
+	set lx [split $x .]
+	#高亮显示搜索词
+	foreach {y z} $lx {
+	set len1 [expr $z+$len]
+	$Window.f.t tag add tags$y$z $x $y.$len1
+	$Window.f.t tag configure tags$y$z -background red -foreground black
+	}
+	}
+
+	}
+}
+
+
+
+## 程序功能：
 #Control-t 随机得到一句诗，
 #Control-f 搜索诗词，
 #l+搜索词，Control-l可以搜索单个句子。

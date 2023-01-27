@@ -8,264 +8,219 @@ package require sqlite3
 sqlite3 db notes.db
 
 
-#初始化
+## 初始化
 proc initial {} {
 
 	#notesname：id、笔记名称
 	#notesneirong：内容 
-    db eval {create table IF NOT EXISTS notes (
-				 id INTEGER PRIMARY KEY ASC,\
-				     notesname varchar(30) NOT NULL,\
-				     notesneirong text NOT NULL
-				 );
-    }
-    #电脑屏幕分辨率
-    set xsw [winfo screenwidth .]
-    set xsh [winfo screenheight .]
-    
-    set mwidth [expr int($xsw*0.7)]
-    set mheight [expr  int($xsh*0.7)]
-    
+	db eval {
+	create table IF NOT EXISTS notes (
+		id INTEGER PRIMARY KEY ASC,\
+		notesname varchar(30) NOT NULL,\
+		notesneirong text NOT NULL
+		);
+	}
 
-    wm minsize .  500 120
-    wm geometry . ${mwidth}x${mheight}+150+150  ;#窗口左上角在150.150处。
+	#电脑屏幕分辨率
+	set xsw [winfo screenwidth .]
+	set xsh [winfo screenheight .]
 
-    #标题：皮皮笔记
-    set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe7\xac\x94\xe8\xae\xb0";
-
-# "皮皮笔记 测试版 ".encode()
-  #  set tstr "\xe7\x9a\xae\xe7\x9a\xae\xe7\xac\x94\xe8\xae\xb0 \xe6\xb5\x8b\xe8\xaf\x95\xe7\x89\x88 ";
-  
-  set tt [encoding convertfrom  utf-8 $tstr]
-  wm title . "$tt pipi.notes windows ver 1.00110"
+	set mwidth [expr int($xsw*0.7)]
+	set mheight [expr  int($xsh*0.7)]
 
 
-    set upframe [frame .f -width $mwidth -height $mheight ;]
-    set uptitle [label .f.ltitle -text "title"]
+	wm minsize .  500 120
+	wm geometry . ${mwidth}x${mheight}+150+150  ;#窗口左上角在150.150处。
 
-    font create textfont -size 26 -weight bold
-
-    set upttext [text .f.t  -width 43 -height 15 -bg grey70 -font textfont  -undo true -yscrollcommand { .f.scroll set } ]
-    #-width 43 -height 15text长宽为15与43个字符的宽度。
-
-    set upscrollbar [scrollbar .f.scroll -command { .f.t yview }]
+	#设置标题：皮皮笔记
+	set tt "\u76ae\u76ae\u7b14\u8bb0\ue006\ue00d"
+	wm title . "$tt pipi.notes windows ver 1.00110"
 
 
-    set bottomFrame [frame .f1]
+	frame .f -width $mwidth -height $mheight ;
+	label .f.ltitle -text "title"
 
-    set bottoml [label .f1.l -text "Enter:" ]
+	font create textfont -size 26 -weight bold
 
-    set bottome [entry .f1.e -width 80 ]
+	text .f.t  -width 43 -height 15 -bg grey70  -font textfont -spacing1 5 -undo true -yscrollcommand { .f.scroll set } 
+	#-width 43 -height 15text长宽为15与43个字符的宽度。
 
-    set bottomBPress [button .f1.b -text "Press" -command show]
+	scrollbar .f.scroll -command { .f.t yview }
 
-	#当单击时改变组件的颜色
-	global flag
-	set flag 0
-	global color
-	set color {purple	"rosy brown" red blue black green SteelBlue orchid navy "dark blue"}
-	global colorZhujian
-	set colorZhujian {.f.ltitle .f1.l .f1.e .f1.b}
-	bind . <KeyPress> {
-		set flag [expr int(rand()*[llength $colorZhujian])]
-		set color1 [expr int(rand()*[llength $color])]
-		
-		set strCZ [lindex $colorZhujian $flag ]
-		$strCZ configure -fg [ lindex $color $color1]
-	};#bind
+	frame .f1
+	label .f1.l -text "Enter:" 
+	entry .f1.e -width 80
+	button .f1.b -text "Press" -command show
 
 }
 
-#调用初始化函数来初始化界面。
+## 调用初始化函数来初始化界面。
 initial
 
+## 单击时改变组件的颜色
+bind . <KeyPress> {
+	
+	chcolor
+}
+
+## 改变组件字体颜色
+proc chcolor {} {
+
+	#global flag
+	set flag 0
+	#global color
+	set color {purple	"rosy brown" red blue black green SteelBlue orchid chocolate}
+#	global colorZhujian
+	set colorZhujian {.f.ltitle .f1.l .f1.e .f1.b}
+
+	set flag [expr int(rand()*[llength $colorZhujian])]
+	set color1 [expr int(rand()*[llength $color])]
+	
+	set strCZ [lindex $colorZhujian $flag ]
+	$strCZ configure -fg [ lindex $color $color1]
 
 
+}
 
 
-#insert
+## insert插入到数据库
 bind .f1.e <Control-i> {
 
-    set name  [string trim [.f1.e get]	]  ;#id、笔记
-    #id是自动插入数据库的，不用输入。
-	
+	set name  [string trim [.f1.e get]	]  ;#id、笔记
+	#id是自动插入数据库的，不用输入。
+
 	#把名字里面的回车换行符去掉，
 	set name [string map {"\r\n"  "" }  $name]
-	
-    set neirong [.f.t get 1.0 end];#内容
 
-    set name [string trim $name]
-    set neirong  [string trim $neirong]
-	
+	set neirong [.f.t get 1.0 end];#内容
+
+	set name [string trim $name]
+	set neirong  [string trim $neirong]
+
 	#把单引号修改为\'，因为sql中单引号有特殊用途，不改会错。
 	set name [string map {'  '' }  $name]
 	set neirong [string map {'  '' }  $neirong]
-	
-    if {$name!="" && $neirong !=""} {
-	db eval "insert  into notes values( null,'$name','$neirong');"
-	.f.t delete 1.0 end
-	.f1.e delete 0 end
-	.f.t insert end "successful to insert."
-    }
+
+	if {$name!="" && $neirong !=""} {
+		db eval "insert  into notes values( null,'$name','$neirong');"
+		.f.t delete 1.0 end
+		.f1.e delete 0 end
+		.f.t insert end "successful to insert."
+	}
 }
 
 
-#搜索一个记录
+
+## 搜索显示一个记录
 bind .f1.e <Control-f> {
-	#获取搜索内容
-    set et [string trim [.f1.e get]	]
-	if {$et!=""} {
-		search $et
-	}
+#获取搜索内容，去掉搜索词两头的空格。
+	set et [string trim [.f1.e get]]
+	search $et whole
+
 }
 
-#搜索一行
+
+## 搜索显示一行
 bind .f1.e <Control-l> {
-	#获取搜索内容
-    set et [string trim [.f1.e get]	]
-    if {$et!=""} {
-		set et "l $et"	
-		search  $et
-	}
+#获取搜索内容，去掉搜索词两头的空格。
+	set et [string trim [.f1.e get]]
+	search  $et line
+
 }
 
 
-#搜索一个记录
-#多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
-#利用tag高亮度显示搜索词。
-#增加一个只列出有搜索单词的句子功能，et中第一个词为l(l即是line)(小L)时，
-proc search {sename} {
 
-	set et $sename
+## 多词搜索一个记录
+#一是读取数据库记录，
+#二是利用tag高亮显示搜索词。
+#多词搜索：利用空格，如：唐 王维，同时搜索唐与王维。
+#type=whole显示有搜索词的整个记录， 
+#type=line显示有搜索词的一行。
+
+proc search {sename type} {
 	
-	#把名字里面的回车换行符去掉，
-	set et [string map {"\r\n"  "" }  $et]
 	
-	set sp ""
-	
-    if {$et != ""}  {
-	
-	#拆分split搜索内容
-	set x1 [split $et " "]
-	
-	#把sp里面的空值去掉。
-	 foreach i $x1 {
-		if {$i!=""} {lappend sp $i}
-	}
-	
-	set lensp [llength $sp]
-	
-	set str "";#str作为搜索字段	
-	
-	#如果第一个搜索词为l(l即是line)(小L)，ii为下面for中i的起始值。
-	if {[lindex $sp 0]=="l"} {
-		set ii 1
-		#set lensp [expr $lensp-1]
-	} else {set ii 0}
-	
-	for {set i $ii} {$i<$lensp} {incr i} {
-		set tmp [lindex $sp $i]
-		#把单引号修改为\'，因为sql中单引号有特殊用途，不改会错。
-		set tmp [string map {'  '' }  $tmp]
-		
-		if {$i<[expr $lensp-1]} {
-			set str "$str (notesname like '%$tmp%' OR notesneirong like '%$tmp%' ) AND "
+	set str ""
+	set i 0
+	#得到sql语句
+	foreach tmp $sename {
+		if { $i eq 0} {
+		append str "( notesname like '%$tmp%' OR notesneirong like '%$tmp%' ) "
 		} else {
-			set str "$str ( notesname like '%$tmp%' OR notesneirong like '%$tmp%' ) "
+		append str " AND  ( notesname like '%$tmp%' OR notesneirong like '%$tmp%' ) "
 		}
+		incr i
 	}
+
+
 
 	#x表示搜索值。
 	set x [db eval "select * from notes where $str"]
-									 
-	#在.f.t中显示搜索内容
-	#如果第一个搜索词为l(l即是line)，只显示一行，否则显示所有内容
-	#如果mmi等于lensp，表明所有搜索词都在这一行。
 
-	foreach {id ming neirong}  $x {
-		if {$ii==1} {
-			#1.拆分neirong，
-			set flst [ split $neirong "\r\n"]
+	#根据whole，line来显示整个或一行记录
+	# 先保存入showStr
+	set showStr ""
+	switch $type {
+		whole {
+			foreach {id ming neirong}  $x {
+			set showStr "$showStr\nID:$id\nMing:$ming\nNeirong:\n$neirong\n\n\n"
+			}
+		}
+		line {
+			foreach {id ming neirong}  $x {
 			
-			#2.遍历flst，找出有搜索词的内容。
-			foreach fi $flst {			
-				#如果每个搜索词都在这一句当中。
-				set mmi 0
-				for {set i $ii} {$i<$lensp} {incr i} {
-					#得到一个搜索词tmp
-					set tmp [lindex $sp $i]
-					if {[string first $tmp $fi 0 ]!=-1} {
-						incr mmi 
-					} 
-						
-				} 
+				#拆分neirong为句子，放入列表nrStr中
+				set Lnr [split $neirong "\r\n"]
+				
+				set tmp ""
+				#去掉空格
+				foreach x $Lnr {
+					if {$x ne ""} {
+					lappend tmp $x
+					}
+				}
+				
+				set lb ""
+				set lc ""
+				set la $tmp
+
 					
-				#如果在一句中有所有搜索词
-				if {$mmi==[expr $lensp-1]} {
-					.f.t insert end "\nid:\t$id \nMing:\t$ming \nfi:\n$fi\n\n"			
+				#比较搜索词
+				foreach x $sename {
+				
+					foreach y $la {	
+					
+						if { [string first $x  $y 0 ] ne -1 } {
+					
+							lappend lb $y
+						}
+					}
+				
+				set lc ""
+				set lc $lb
+				
+				set lb ""
+				set la ""
+				set la $lc
+				}
+				foreach x $lc {
+				set showStr "$showStr\nID:$id\nMing:$ming\nNeirong:\n$x\n\n\n"
+				}
 				}
 			}
-		} else {
-			.f.t insert end "\nid:\t$id \nMing:\t$ming \nNeiRong:\n$neirong\n\n"
-		} 		
 	}
-	.f.ltitle configure -text "Title   $et"
-	
-	gaoliang $ii $sp $lensp
-    };#$et != ""
-}
 
-#ii：当搜索词第一个是l (即line)时，ii=1,否则为0，
-#sp为搜索词， lensp为搜索词个数，sp与lensp都是去掉ii后的数。
-proc gaoliang {ii sp lensp} {
 
-	#得到当前text的总行数
-	set lines [.f.t count -displaylines 1.0 end]
-	
-	#高亮度显示搜索词。
-	#i代表搜索词的个数，以空格来分开。
-	#j代表.f.t中的行数，行数从1-end。
-	#k代表搜索词在.f.t中每一行的字符串里的位置。
-	for {set i $ii} {$i<$lensp} {incr i} {
-		set tmp [lindex $sp $i];#搜索词
+	.f.t insert end $showStr
 
-		#获取搜索词长度
-		set lentmp [string length $tmp]
+	#高亮主界面中的搜索词
+	highlight .
+
 		
-		for {set j 1} {$j<=$lines} {incr j}  {
-			#得到每一行的字符串linestr
-			set linestr [.f.t get $j.0 $j.end] 
-			#每一行字符串的长度lenlinestr
-			set lenlinestr [string length $linestr]
-			
-			set k 0
-			while {$k<$lenlinestr} {
-				#获取搜索词位置
-				set tmplocation [string first $tmp  $linestr $k]
-				
-				if {$tmplocation!=-1} {
-				#==-1表示没有找到
-				
-				#高亮度搜索词
-				set tagx tag$i$j
-				#.f.t insert end "\ntagx tag$i$j\n"
-				
-				#k搜索词所在位置
-				set k [expr $tmplocation+$lentmp]
-				
-				.f.t tag add $tagx \
-					$j.$tmplocation $j.$k
-				.f.t tag configure $tagx -background red -foreground black	
-				} else {
-					break
-				}
-			};#while k
-		};#for j
-	};#for i
 }
 
 
-#出题 
+## 出题 
 #1.得到总记录数，
 #2.得到一个随机数，
 #并用select 得到这个记录，并显示在组件text中
@@ -331,7 +286,9 @@ bind .f.t  <Control-t> {
 
 
 
-#更新数据库
+
+
+## 更新数据库
 #在底部输入框中输入数字并按回车键 更新数据库中的内容。先在.f1.e中输入要更新的id号(整数)，
 #建立toplevel级别的界面
 #单击更新按钮，保存
@@ -355,109 +312,126 @@ bind .f1.e  <Return> {
 
 
 
-#显示更新界面
+
+## 显示更新界面
 proc update0 {} {
 
-    toplevel .tplupdate
-    wm title .tplupdate "Update...." 	
-    
-    frame .tplupdate.f
-    
-    label .tplupdate.f.ltitle 
-    
-    text .tplupdate.f.t -width 40 -height 12 -bg grey70 -font textfont  -undo true -yscrollcommand { .tplupdate.f.scroll set } 
-    scrollbar .tplupdate.f.scroll -command { .tplupdate.f.t yview }
+	toplevel .tplupdate
+	wm title .tplupdate "Update...." 	
+
+	frame .tplupdate.f
+
+	label .tplupdate.f.ltitle 
+
+	text .tplupdate.f.t -width 40 -height 12 -bg grey70 -font textfont  -spacing1 25 -undo true -yscrollcommand { .tplupdate.f.scroll set } 
+	scrollbar .tplupdate.f.scroll -command { .tplupdate.f.t yview }
+
+
 
 	frame .tplupdate.f1
-    label .tplupdate.f1.l -text "id:"  
-    entry .tplupdate.f1.e -width 60 
 
-    button .tplupdate.f1.b -text "Update" -command {
+	label .tplupdate.f1.l0 -text "Find:"
+
+	#entry e0是用来高亮显示搜索词的。
+	entry .tplupdate.f1.e0 -width 360 
+
+
+	label .tplupdate.f1.l -text "Id:"
+
+	entry .tplupdate.f1.e -width 60 
+
+	button .tplupdate.f1.b -text "Update" -command {
 	update1
-    }
+	}
 
-	#更新界面
+	#固定显示更新界面
 	set xsw [winfo screenwidth .]
-    set xsh [winfo screenheight .]
-    
-    set mwidth [expr int($xsw*0.7)]
-    set mheight [expr  int($xsh*0.7)]
-	
+	set xsh [winfo screenheight .]
+
+	set mwidth [expr int($xsw*0.7)]
+	set mheight [expr  int($xsh*0.7)]
+
 	wm geometry .tplupdate  ${mwidth}x${mheight}+150+150  ;
 	wm minsize .tplupdate 500 120 
-	
-	#改变尺寸
-	bind .tplupdate <Configure> {	
-		ResizeJiemian .tplupdate
-	}
-	
-    #获取要更新的记录的id号(整数)	，
-    set et [string trim [.f1.e get]	]
-    
+
+
+	#获取要更新的记录的id号(整数)	，
+	set et [string trim [.f1.e get]	]
+
 	#把名字里面的回车换行符去掉，
 	set et [string map {"\r\n"  "" }  $et]
-	
-    set x [db eval "select * from notes where id=$et"	]
+
+	set x [db eval "select * from notes where id=$et"	]
 
 
-    foreach  {id name neirong } $x {
+	foreach  {id name neirong } $x {
 	.tplupdate.f.ltitle configure -text "ID:$id\t$name"
 	.tplupdate.f.t insert end "$neirong"
 	.tplupdate.f1.e insert 0 "$name"
 	.tplupdate.f1.l configure -text "$id"
 
-    }	
+	}		
+
+	#改变尺寸
+	bind .tplupdate <Configure> {	
+		ResizeJiemian .tplupdate
+	}
+	
+	#回车时高亮.tplupdate.f1.e0中的搜索词
+	bind .tplupdate.f1.e0 <Return> {	
+	## 高亮.tplupdate更新界面
+	highlight .tplupdate ;#调用高亮proc
+
+	}
 }
 
-#保存更新内容
+## 保存更新内容
 proc update1 {} {
-    #获取要更新的记录的id号(整数)	，
-    set id [string trim [.tplupdate.f1.l cget -text]	]
-    
-    #获取笔记名
-    
-    set name [.tplupdate.f1.e get]
-	
+	#获取要更新的记录的id号(整数)，
+	set id [string trim [.tplupdate.f1.l cget -text]	]
+
+	#获取笔记名
+
+	set name [.tplupdate.f1.e get]
+
 	#把名字里面的回车换行符去掉，
 	set name [string map {"\r\n"  "" }  $name]
 
-    #获取笔记的内容
-    set neirong [.tplupdate.f.t get 1.0 end ]
-	
+	#获取笔记的内容
+	set neirong [.tplupdate.f.t get 1.0 end ]
+
 	#把单引号修改为\'，因为sql中单引号有特殊用途，不改会错。
 	set name [string map {'  '' }  $name]
 	set neirong [string map {'  '' }  $neirong]
 	
 	set xsw [winfo screenwidth .]
-    set xsh [winfo screenheight .]
-    
-    set mwidth [expr int($xsw*0.7)]
-    set mheight [expr  int($xsh*0.7)]
+	set xsh [winfo screenheight .]
 
-    toplevel .t1
- 	wm title .t1 "Update Ok."
+	set mwidth [expr int($xsw*0.7)]
+	set mheight [expr  int($xsh*0.7)]
+
+	toplevel .t1
+	wm title .t1 "Update Ok."
 	wm maxsize .t1 $mwidth $mheight
 	wm maxsize .t1 $mwidth $mheight
 	wm geometry .t1  ${mwidth}x${mheight}+150+150  ;
-	
+
 	text .t1.t -width 43 -height 15 -bg grey70 -font textfont
-    place .t1.t -relx 0.001 -y 0.001 -width  [expr $mwidth-1] -height [expr $mheight-1]
-    .t1.t insert end  "\t id:$id\nname:$name\nneirong:\n $neirong\n"
+	place .t1.t -relx 0.001 -y 0.001 -width  [expr $mwidth-1] -height [expr $mheight-1]
+	.t1.t insert end  "\t id:$id\nname:$name\nneirong:\n $neirong\n"
 	 if {$name!="" && $neirong !=""} {
 		db eval "update notes set  notesname='$name',notesneirong='$neirong' where id=$id"
-   }
+	}
 }
 
 
 
-#按Press按钮时调用show函数。
-
-
+## 按Press按钮时调用show函数。
 #显示.f1.e中的字符串
 proc show {} {
 
 	#获取输入框.f1.e中的字符串
-	set et  [string trim [.f1.e get]	]
+	set et  [string trim [.f1.e get] ]
 
 	#把名字里面的回车换行符去掉，
 	set et [string map {"\r\n"  "" }  $et]
@@ -470,19 +444,18 @@ proc show {} {
 	}
 }
 
-#动态修改程序大小
+## 动态修改主界面大小
 bind . <Configure> {
 	ResizeJiemian .
 }
 
-#动态改变窗口
+## 动态改变主界面和其他子窗口
 proc ResizeJiemian {Window} {
-#当前窗口尺寸
+	#当前窗口尺寸
 	set hei [winfo  height $Window]
 	set wid [winfo width $Window]
-	if {$Window == "."} {
-		set Window [string map { . ""} $Window]
-	}
+	
+
 	set fontsize [font actual textfont -size]
 
 	#label尺寸
@@ -492,21 +465,105 @@ proc ResizeJiemian {Window} {
 	#scroll
 	set scrollwidth 25
 	
-	#主界面
-    place $Window.f  -x 1 -y 1 -width [expr $wid-1] -height [expr $hei-$labelheight-1]
-    place $Window.f1  -x 1 -y [expr $hei-$labelheight-5] -width [expr $wid-1] -height [expr $hei-$labelheight-1]    
+	switch $Window {
 	
-	place $Window.f.ltitle -relx 0.001 -rely 0.001 -width  [expr $wid-2] -height $labelheight
-    place $Window.f.t   -relx 0.001 -y [expr $labelheight+2] -width  [expr $wid-$scrollwidth-4] -height [expr $hei-$labelheight*2-4]
-    place $Window.f.scroll  -x [expr $wid-$scrollwidth-1] -y [expr $labelheight+2] -width  $scrollwidth -height [expr $hei-$labelheight*2-1]
+		"." {#主界面
 
-    place $Window.f1.l  -x 1 -rely 0.001 -width $labelwidth -height $labelheight 
-    place $Window.f1.e -x [expr $labelwidth+1] -rely 0.001 -width [expr $wid-$labelwidth*2-5] -height $labelheight
-    place $Window.f1.b -x [expr $wid-$labelwidth-2] -rely 0.001 -width $labelwidth -height  $labelheight
+	set Window  ""
+
+	place $Window.f  -x 1 -y 1 -width [expr $wid-1] -height [expr $hei-$labelheight-1]
+	place $Window.f1  -x 1 -y [expr $hei-$labelheight-5] -width [expr $wid-1] -height [expr $hei-$labelheight-1]    
+
+	place $Window.f.ltitle -relx 0.001 -rely 0.001 -width  [expr $wid-2] -height $labelheight
+
+	place $Window.f.t   -relx 0.001 -y [expr $labelheight+2] -width  [expr $wid-$scrollwidth-4] -height [expr $hei-$labelheight*2-5];
+	place $Window.f.scroll  -x [expr $wid-$scrollwidth-1] -y [expr $labelheight+2] -width  $scrollwidth -height [expr $hei-$labelheight*2-1]
+
+	place $Window.f1.l  -x 1 -rely 0.001 -width $labelwidth -height $labelheight 
+
+	place $Window.f1.e -x [expr $labelwidth+1] -rely 0.001 -width [expr $wid-$labelwidth*2-5] -height $labelheight
+
+	place $Window.f1.b -x [expr $wid-$labelwidth-2] -rely 0.001 -width $labelwidth -height  $labelheight
+
+	}
+## 界面修改
+		".tplupdate"  {	#更新update界面
+
+	place $Window.f  -x 1 -y 1 -width [expr $wid-1] -height [expr $hei-$labelheight*2-5]
+
+	place $Window.f1  -x 1 -y [expr $hei-$labelheight*2-1] -width [expr $wid-1] -height [expr $labelheight*2-1]   
+
+	place $Window.f.ltitle -relx 0.001 -rely 0.001 -width  [expr $wid-2] -height $labelheight
+
+	#减少text组件的高度-height
+	place $Window.f.t   -relx 0.001 -y [expr $labelheight+2] -width  [expr $wid-$scrollwidth-4] -height [expr $hei-$labelheight*3-1];
+
+	place $Window.f.scroll  -x [expr $wid-$scrollwidth-1] -y [expr $labelheight+2] -width  $scrollwidth -height [expr $hei-$labelheight*3-1]
+
+
+	place $Window.f1.l0  -x 1 -y 1 -rely 0.001 -width $labelwidth -height $labelheight 
+
+	#entry组件e0，用来输入并高亮搜索词。
+	place $Window.f1.e0 -x [expr $labelwidth+1]  -y 1\
+	 -rely 0.001 -width [expr $wid-$labelwidth*2-5]\
+	-height $labelheight
+
+	place $Window.f1.l  -x 1 -rely 0.001 -width $labelwidth -height $labelheight -y [expr $labelheight+1] 
+
+	place $Window.f1.e -x [expr $labelwidth+1] -rely 0.001 -width [expr $wid-$labelwidth*2-5] -height $labelheight -y [expr $labelheight+1] 
+
+	place $Window.f1.b -x [expr $wid-$labelwidth-2] -rely 0.001 -width $labelwidth -height  $labelheight -y [expr $labelheight+1] 
+
+
+	}
+	}
+
 
 }
 
-#程序功能：
+## 高亮显示搜索词proc
+proc highlight Window {
+	#如果调用程序为主界面时，把Window变成空值
+	switch $Window {
+	. {
+		set Window ""
+		set se e
+	}
+	.tplupdate {
+		set se e0
+	}
+	}
+	#得到搜索词searchstr
+	#得到一个或多个搜索词，只用一个的
+	set searchstr [string trim [$Window.f1.$se get]]
+	foreach sx $searchstr {
+	#得到搜索的所有索引index，利用text组件的search
+	set la [$Window.f.t search -forwards -all $sx 1.0 end]
+	#$Window.f.t insert 1.0 "la$la"
+	#给.f.t添加一个tag，用来高亮文字。
+
+	set len [string length $sx];#得到搜索词长度
+	
+	#得到.f.t tag 位置，x的形式为x.y，x为行，y为列。
+	foreach x $la {	
+	#分解x
+	set lx [split $x .]
+	#高亮显示搜索词
+	foreach {y z} $lx {
+	set len1 [expr $z+$len]
+	$Window.f.t tag add tags$y$z $x $y.$len1
+	$Window.f.t tag configure tags$y$z -background red -foreground black
+	}
+	}
+
+	}
+}
+
+
+
+
+
+## 程序功能：
 #Control-t 随机得到一句笔记，
 #Control-f 搜索笔记，
 #l+搜索词，Control-l可以搜索单个句子。
