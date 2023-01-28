@@ -395,12 +395,13 @@ proc update0 {} {
     label .tplupdate.f1.l -text "id:"  
     entry .tplupdate.f1.e -width 60 
 
-    button .tplupdate.f1.b -text "Update" -command {
+	#点击Update按钮更新
+	button .tplupdate.f1.b -text "Update" -command {
 	update1
-    }
+	}
 
     
-    #更新界面
+    #固定显示更新界面
     set xsw [winfo screenwidth .]
     set xsh [winfo screenheight .]
     
@@ -670,6 +671,7 @@ proc highlight Window {
 	}
 
 	#删除tags
+	set tag1 ""
 	set tag1 [$Window.f.t tag names]
 	if {$tag1 ne ""} {
 		foreach x $tag1 {
@@ -678,6 +680,10 @@ proc highlight Window {
 			}
 		}
 	}
+
+	#颜色
+	set color { red gold purple "rosy brown"  green SteelBlue orchid chocolate}
+	set colori 0
 
 	#得到搜索词searchstr
 	#得到一个或多个搜索词，只用一个的
@@ -696,10 +702,14 @@ proc highlight Window {
 	foreach {y z} $lx {
 	set len1 [expr $z+$len]
 	$Window.f.t tag add tags$y$z $x $y.$len1
-	$Window.f.t tag configure tags$y$z -background red -foreground black  -borderwidth 2 -relief raised
+	$Window.f.t tag configure tags$y$z -background [lindex $color $colori] -foreground black -borderwidth 2 -relief raised
 	}
 	}
-
+	if {$colori<[expr [llength $color]-1]} {
+		incr colori
+	} else {
+		set colori 0
+	} 
 	}
 }
 
